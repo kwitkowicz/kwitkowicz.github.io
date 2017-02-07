@@ -1,0 +1,265 @@
+﻿:title: Raspberry Pi: moduły jądra - część 1
+:date: 2017-01-07 22:00
+:slug: rpi-lkm-part-1
+:category: programowanie
+:authors: Krzysiek Witkowicz
+:tags: c,raspberry pi, kernel
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+Wstęp
+=====
+Dzięki modułowej budowie jądro Linuxa łączy w sobie zarówno zalety makro jak i mikrokerneli. Wydzielone fragmenty kodu,
+nazywane LKM, odpowiadające za obsługę sprzętu, protokołów sieciowych czy systemów plików mogą być ładowane i usuwane
+z przestrzeni jądra, co ogranicza rozmiar samego jądra oraz znacznie ułatwia rozwój i testowanie nowych funkcjonalności.
+Moduł jądra można więc traktować jako koncepcję analogiczną od sterownika w DOS/Windows, choć obsługuje nie tylko urządzenia -
+może bezpośrednio pisać/czytać z systemu plików.
+
+Wbrew pozorom, napisanie własnego modułu jądra nie jest rzeczą nie wiadomo jak skomplikowaną. Zasadniczo wystarcza
+znajomość C, by poradzić sobie z takim zadaniem. Postaram się pokazać w kilku przykładach, jak, wykorzystując Raspberry Pi,
+stworzyć własny moduł.
+
+Najprostszy moduł
+=================
+Zaczniemy od najprostszego, możliwego do skompilowania kodu. Poniższy program nic nie robi, poza tym, że można go
+załadować i usunąć z jądra Linuxa.
+
+.. code-block:: c
+
+ #include <linux/init.h>
+ #include <linux/module.h>
+
+ static int __init dummy_init(void)
+ {
+         return 0;
+ }
+
+ static void __exit dummy_exit(void)
+ {
+ }
+
+ module_init(dummy_init);
+ module_exit(dummy_exit);
+
+
+Jak widać, nie ma w nim większej filozofii. Makra :c:`module_init()` oraz :c:`module_exit()` służą od zarejestrowania funkcji
+wykonujących się kolejno podczas ładowania i usuwania modułu.
+Aby zbudować powyższy moduł będziemy potrzebować odpowiedniego Makefile, a dokładniej biorąc kbuild Makefile:
+
+.. code-block:: makefile
+
+ obj-m+=dummy.o
+
+ all:
+                make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules
+ clean:
+                make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean
+
+
+Najważniejsza jest pierwsza linijka: dyrektywa :pyth:`obj-m` wskazuje, że chcemy zbudować moduł jądra. Cel clean nie jest
+na tym etapie absolutnie konieczny, dodałem go ze względu na konwencję. Tworzymy więc plik Makefile o w/w treści i
+próbujemy skompilować nasz moduł:
+
+.. code-block:: bash
+
+ make
+
+Powinniśmy otrzymać informację o poprawnym zbudowaniu modułu
+
+.. code-block:: bash
+
+ make -C /lib/modules/4.4.36-v7+/build/ M=/home/pi/c/kernel
+ make[1]: Wejście do katalogu '/usr/src/linux-rpi-4.4.y'
+   CC [M]  /home/pi/c/kernel/dummy.o
+   Building modules, stage 2.
+   MODPOST 1 modules
+   CC      /home/pi/c/kernel/dummy.mod.o
+   LD [M]  /home/pi/c/kernel/dummy.ko
+ make[1]: Opuszczenie katalogu '/usr/src/linux-rpi-4.4.y'
+
+Niestety, bardziej prawdopodobny będzie błąd kompilacji wynikający z braku katalogu :bash:`build` w ścieżce
+:bash:`/lib/modules/<version>`
+
+.. code-block:: bash
+
+ make[1]: *** /lib/modules/4.4.36-v7+/build/: Nie ma takiego pliku ani katalogu.
+  Stop.
+
+Przygotowanie środowiska do kompilacji
+======================================
+
+U mnie zadziałała następująca metoda:
+
+1. Aktualizujemy raspbiana
+
+.. code-block:: bash
+
+ sudo apt-get update
+ sudo apt-get upgrade
+ sudo rpi-update
+
+2. Instalujemy najświeższe pliki nagłówkowe
+
+.. code-block:: bash
+
+ sudo apt-get install raspberrypi-kernel-headers
+
+3. Sprawdzamy wersję zainstalowanego jądra
+
+.. code-block:: bash
+
+ uname -r
+
+U mnie była to **4.4.36-v7+**
+
+4. Dociągamy brakujące źródła
+
+.. code-block:: bash
+
+ wget https://github.com/raspberrypi/linux/archive/rpi-4.4.y.zip
+
+i podlinkowujemy je do katalogu :bash:`build`
+
+.. code-block:: bash
+
+ unzip rpi-4.4.y.zip
+ sudo mv linux-rpi-4.4.y/ /usr/src
+ ln -s /usr/src/linux-rpi-4.4.y/ /lib/modules/4.4.36-v7+/build
+
+5. Konfigurujemy
+
+.. code-block:: bash
+
+ cd /lib/modules/4.4.36-v7+/build
+ sudo make mproper
+ sudo modprobe configs
+ sudo gzip -dc /proc/config.gz >.config
+ sudo make modules_prepare
+
+i zasadniczo gotowe. Napotkałem jeszcze problem związany z niewłaściwą wersją pliku Module.symvers, którego rozwiązanie
+było banalnie proste:
+
+.. code-block:: bash
+
+ sudo cp /usr/src/linux-headers-4.4.34-v7+/Module.symvers /usr/src/linux-rpi-4.4.y/Module.symvers
+
+Zarządzanie modułami
+====================
+
+Linux udostępnia zestaw poleceń do zarządzania modułami jądra, od wyświeltenia listy wykorzystywanych w danej chwili
+modułów, po ich ładowanie i kasowanie.
+
+Informacja o modułach
+---------------------
+
+:bash:`lsmod` wyświetla listę załadowanych modułów
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ lsmod
+ Module                  Size  Used by
+ binfmt_misc             6388  1
+ r8188eu               421558  0
+ cfg80211              428431  1 r8188eu
+ joydev                  9024  0
+ evdev                  11396  6
+ rfkill                 16037  2 cfg80211
+ snd_bcm2835            20447  0
+ snd_pcm                75762  1 snd_bcm2835
+ snd_timer              19288  1 snd_pcm
+ snd                    51908  3 snd_bcm2835,snd_timer,snd_pcm
+ bcm2835_gpiomem         3040  0
+ bcm2835_wdt             3225  0
+ uio_pdrv_genirq         3164  0
+ uio                     8000  1 uio_pdrv_genirq
+ i2c_dev                 5859  0
+ fuse                   84037  3
+ ipv6                  347594  34
+
+Polecenie podaje kolejno: nazwę modułu, jego rozmiar w pamięci, licznik użycia oraz listę modułów zależnych.
+
+Szczegółowe informacje o danym module uzyskamy korzystając z :bash:`modinfo`:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ modinfo ipv6
+ filename:       /lib/modules/4.4.36-v7+/kernel/net/ipv6/ipv6.ko
+ alias:          net-pf-10
+ license:        GPL
+ description:    IPv6 protocol stack for Linux
+ author:         Cast of dozens
+ srcversion:     82E583AF10098874E2B2E17
+ depends:
+ intree:         Y
+ vermagic:       4.4.36-v7+ SMP mod_unload modversions ARMv7
+ parm:           disable:Disable IPv6 module such that it is non-functional (int)
+ parm:           disable_ipv6:Disable IPv6 on all interfaces (int)
+ parm:           autoconf:Enable IPv6 address autoconfiguration on all interfaces (int)
+
+Mamy informację m.in. o ścieżce do modułu, licencji, autorach, zależnościach czy przekazywanych parametrach. Należy mieć
+na uwadze, że zapewnienie takich informacji jak np. opis czy lista autorów leży w gestii programistów piszących dany moduł,
+
+Ładowanie modułu do pamięci
+---------------------------
+
+Do załadowania modułu służy polecenie :bash:`insmod`:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo insmod dummy.ko
+ pi@raspberrypi:~ $ lsmod |grep dummy
+ dummy                    734  0
+ pi@raspberrypi:~ $
+
+Należy pamiętać, że próba załadowania załadowanego już modułu zakończy się błędem:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo insmod dummy.ko
+ insmod: ERROR: could not insert module dummy.ko: File exists
+ pi@raspberrypi:~ $
+
+Usuwanie modułu
+---------------
+
+Załadowany moduł możemy usunąć poleceniem :bash:`rmmod`:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo rmmod dummy.ko
+ pi@raspberrypi:~ $ lsmod |grep dummy
+ pi@raspberrypi:~ $
+
+Analgicznie do :bash:`insmod` próba usunięcia niezaładowanego modułu skutkuje błędem:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo rmmod dummy.ko
+ rmmod: ERROR: Module dummy is not currently loaded
+ pi@raspberrypi:~ $
+
+Modprobe
+--------
+
+Polecenie :bash:`modprobe` jest kombajnem zastępującym, wspomniane wcześniej, :bash:`insmod` oraz :bash:`rmmod`.
+Modprobe nie tylko wykrywa zależności pomiędzy modułami, ale również pozwala na automatyzację zarządzania modułami poprzez
+pliki konfiguracyjne.
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo modprobe dummy
+ pi@raspberrypi:~ $ lsmod |grep dummy
+ dummy                   2845  0
+ pi@raspberrypi:~ $ sudo modprobe -r dummy
+ pi@raspberrypi:~ $ lsmod |grep dummy
+ pi@raspberrypi:~ $
+
+
+
