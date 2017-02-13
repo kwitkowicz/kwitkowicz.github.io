@@ -1,0 +1,182 @@
+﻿:title: Raspberry Pi: moduły jądra - część 2
+:date: 2017-02-13 21:00
+:slug: rpi-lkm-part-2
+:category: programowanie
+:tags: c,raspberry pi, kernel
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+
+W poprzedniej części pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Dziś postaram się opisać sposoby
+komunikacji pomiędzy użytkownikiem a modułami.
+
+Hello World
+===========
+
+W sumie jet to program od którego należałoby zacząć - wypisanie przywitania, w naszym przypadku do logu:
+
+.. code-block:: c
+
+ #include <linux/init.h>
+ #include <linux/module.h>
+
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Krzysiek Witkowicz");
+ MODULE_DESCRIPTION("Hello World from the linux kernel module");
+ MODULE_VERSION("1.0");
+
+ static int __init hello_init(void)
+ {
+           printk(KERN_INFO "Hello World from the first Kernel Module!\n");
+           return 0;
+ }
+
+ static void __exit hello_exit(void)
+ {
+           printk(KERN_INFO "Goodbye from the Kernel Module!\n");
+ }
+
+ module_init(hello_init);
+ module_exit(hello_exit);
+
+Należy zwrócić uwagę na 2 rzeczy:
+
+* Makra :c:`MODULE_*` zapewniają informacje dla modinfo
+* Funkcja :c:`printk()` - jądro nie ma dostępu do bibliotek z przestrzeni użytkownika, tak więc nie możemy skorzystać z funkcji :c:`printf()`. Zamiast niej musimy użyć dedykowanej do pracy w przestrzeni jądra :c:`printk()`.
+
+Dopisujemy obiekt hello.o do Makefile, kompilujemy a następnie ładujemy i usuwamy nasz nowy moduł:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo insmod hello.ko
+ pi@raspberrypi:~ $ sudo rmmod hello.ko
+
+Możemy teraz zajrzeć do logu /var/log/kern.log
+
+.. code-block:: bash
+
+ Feb  7 19:20:14 raspberrypi kernel: [ 9649.667909] Hello World from the first Kernel Module!
+ Feb  7 19:20:22 raspberrypi kernel: [ 9657.602222] Goodbye from the Kernel Module!
+
+Przekazywania parametrów do modułu
+==================================
+
+Jedną z metod komunikacji z modułem jądra jest przekazywanie parametrów podczas ładowania modułu. Pokazuje to poniższy
+przykład:
+
+.. code-block:: c
+
+  #include <linux/init.h>
+  #include <linux/module.h>
+  #include <linux/moduleparam.h>
+
+  MODULE_LICENSE("GPL");
+  MODULE_AUTHOR("Krzysiek Witkowicz");
+  MODULE_DESCRIPTION("Passing command line arguments to LKM");
+  MODULE_VERSION("1.0");
+
+  static char * string = "How are you?";
+  static int integer = 0;
+  static short int strange_short = 666;
+  static long int my_array[5] = {};
+  static int array_num = 0;
+
+  module_param(string, charp, 0000 );
+  MODULE_PARM_DESC(string, "My string");
+  module_param(integer, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  MODULE_PARM_DESC(integer, "My integer");
+  module_param_named(normal_short, strange_short, short, 0644);
+  MODULE_PARM_DESC(strange_short, "My named parameter");
+  module_param_array(my_array, long, &array_num, 0000);
+  MODULE_PARM_DESC(my_array, "My array of longs");
+
+  static int __init cli_init(void)
+  {
+             int i = 0;
+             printk(KERN_INFO "My parameters are: \n");
+             printk(KERN_INFO "string %s\n", string);
+             printk(KERN_INFO "integer %d\n",integer);
+             printk(KERN_INFO "short %hd\n",strange_short);
+             printk(KERN_INFO "table got %d elements and contains:\n",array_num);
+             for (i = 0; i < (sizeof (my_array) / sizeof (long int)); i++)
+             {
+                     printk(KERN_INFO "\telement[%d] = %ld\n", i, my_array[i]);
+
+             }
+
+  static void __exit cli_exit(void)
+  {
+             printk(KERN_INFO "Goodbye from the Kernel Module!\n");
+  }
+
+  module_init(cli_init);
+  module_exit(cli_exit);
+
+Zaczynamy od zdefiniowania zmiennych globalnych, których wartość potem będziemy mogli zmodyfikować przy zawołaniu :bash:`insmod`.
+Następnie, przy użyciu makra :c:`module_param` wskazujemy te zmienne jako argumenty wiersza poleceń. Ostatecznie, przy
+użyciu :c:`MODULE_PARM_DESC` dokumentujemy nasze parametry - dzięki temu ich opis będzie widoczny w :bash:`modinfo`.
+
+module_param
+------------
+
+Jak przed chwilą wspomniałem, makro :c:`module_param(name, type, perm)` służy do określenia parametrów modułu. Przyjmuje ono
+następujące parametry:
+
+* **name** - nazwa parametru: ta sama nazwa dotyczy zarówno zmiennej użytej w kodzie jak i nazwy jaką wskazuje użytkownik. Możliwe jest również użycie nazwanych parametrów przy pomocy makra :c:`module_param_named(name, variable, type, perm)` - wartość :c:`name` jest wykorzystywana przez użytkownika, natomiast :c:`variable` odpowiada zmiennej w kodzie modułu.
+* **type** - typ użytego argumentu. Możliwe rodzaje to :c:`byte, short, ushort, int, uint, long, ulong, charp, bool, invbool`. Nazwy są samotłumaczące się, ciekawostką jest :c:`invbool` przechowujący wartość przeciwną do podanej przez użytkownika. :c:`byte` jest przechowywany w pojedynczym :c:`char`, :c:`bool` oraz :c:`invbool` w :c:`int`. Pozostałe typy przechowywane są w odpowiadających im typach języka C.
+* **perm** - opis uprawnień dla odpowiadającego pliku w sysfs. Uprawnienia mogą być podane w dobrze znanym formacie ósemkowym np. 0664 (:bash:`-rw-rw-r--`) lub też przy pomocy flag bitowych np. :c:`S_IRUSR | S_IWUSR | S_IRGRP` co odpowiada uprawnieniom 0640. Podanie samego zera blokuje wpis w sysfs.
+
+module_param_array
+------------------
+
+Do modułu można również przekazać listę parametrów, która będzie przechowywana w zwykłej tablicy. Służy do tego
+makro :c:`module_param_array(name, type, nump, perm)`. Parametry :c:`name, type, perm` są analogiczne do tych z :c:`module_param`.
+Nowością jest parametr **nump** - wskaźnik na zmienną typu integer w której jądro będzie przechowywać ilość przekazanych elementów listy.
+Należy pamiętać, by tablica wskazywana prze parametr :c:`name` była zaalokowana statycznie - jądro musi znać rozmiar tablicy na etapie
+kompilacji.
+
+Analogicznie do :c:`module_param` możliwe jest użycie parametrów nazwanych - służy do tego makro :c:`module_param_array_named(name, array, type, nump, perm)`.
+
+A tak wygląda nasz moduł "w akcji":
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo insmod cli_arguments.ko normal_short=-11 integer=12345
+ pi@raspberrypi:~ $ tail -10 /var/log/kern.log
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872885] My parameters are:
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872907] string How are you?
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872915] integer 12345
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872922] short -11
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872929] table got 0 elements:
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872937]      element[0] = 0
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872944]      element[1] = 0
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872950]      element[2] = 0
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872957]      element[3] = 0
+ Feb 13 20:28:36 raspberrypi kernel: [ 7597.872964]      element[4] = 0
+ pi@raspberrypi:~ $ sudo rmmod  cli_arguments.ko
+ pi@raspberrypi:~ $ sudo insmod cli_arguments.ko my_array=111,54353,-33333 string='"Linux kernel modules are easy."'
+ pi@raspberrypi:~ $ tail -10 /var/log/kern.log
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387032] My parameters are:
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387061] string Linux kernel modules are easy.
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387073] integer 0
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387083] short 666
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387093] table got 3 elements:
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387104]      element[0] = 111
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387115]      element[1] = 54353
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387126]      element[2] = -33333
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387136]      element[3] = 0
+ Feb 13 20:40:49 raspberrypi kernel: [ 8330.387146]      element[4] = 0
+
+Należy zwrócić uwagę na sposób przekazywania napisu jako parametru. W przypadku takiego zawołania:
+:bash:`sudo insmod cli_arguments.ko string="Hi there!"` pojedyncze cudzysłowy zostaną 'zjedzone' przez
+powłokę i insmod przekaże następujący argument :bash:`string=Hi there!`. Jądro potraktuje 'Hi' jako wartość parametru 'string',
+natomiast 'there!' zostanie uznane za kolejny (nierozpoznany) argument. Aby tego uniknąć wystarczy otoczyć podwójny
+cudzysłów pojedynczym: :bash:`sudo insmod cli_arguments.ko string='"Hi there"'`.
+
