@@ -1,5 +1,5 @@
 ﻿:title: Raspberry Pi: moduły jądra - część 1
-:date: 2017-01-07 22:00
+:date: 2017-02-07 22:00
 :slug: rpi-lkm-part-1
 :category: programowanie
 :authors: Krzysiek Witkowicz
@@ -49,9 +49,16 @@ załadować i usunąć z jądra Linuxa.
  module_exit(dummy_exit);
 
 
-Jak widać, nie ma w nim większej filozofii. Makra :c:`module_init()` oraz :c:`module_exit()` służą od zarejestrowania funkcji
-wykonujących się kolejno podczas ładowania i usuwania modułu.
-Aby zbudować powyższy moduł będziemy potrzebować odpowiedniego Makefile, a dokładniej biorąc kbuild Makefile:
+Kod, choć zajmuje kilka linijek, jest całkiem ciekawy. Przede wszystkim rzuca się w oczy brak funkcji :c:`main()`. Wynika
+to z faktu, iż moduły nie wykonują się sekwencyjnie. Ich głównym zadaniem jest oczekiwanie na konkretne żądania i ich
+obsługa - tak, jak w programowaniu sterowanym zdarzeniami. Widać też niespotykane gdzie indziej makra
+:c:`module_init()` oraz :c:`module_exit()` służące do zarejestrowania funkcji wykonujących się kolejno podczas
+ładowania i usuwania modułu. Różnic pomiędzy tradycyjną aplikacją a modułem jądra jest oczywiście więcej. Przede wszystkim
+moduły 'żyją' w przestrzeni jądra a nie w przestrzeni użytkownika. Komunikacja pomiędzy przestrzeniami odbywa się
+poprzez ściśle zdefiniowany interfejs. W modułach wszelkie zaalokowane zasoby zwalniamy ręcznie podczas usuwania modułu -
+system tego za nas nie zrobi. Moduły jądra nie zapewniają też np. wsparcia dla operacji zmiennoprzecinkowych.
+
+Aby zbudować powyższy przykład będziemy potrzebować odpowiedniego Makefile, a dokładniej biorąc kbuild Makefile:
 
 .. code-block:: makefile
 
@@ -71,7 +78,7 @@ próbujemy skompilować nasz moduł:
 
  make
 
-Powinniśmy otrzymać informację o poprawnym zbudowaniu modułu
+Powinniśmy otrzymać informację o poprawnym zbudowaniu modułu:
 
 .. code-block:: bash
 
@@ -92,8 +99,8 @@ Niestety, bardziej prawdopodobny będzie błąd kompilacji wynikający z braku k
  make[1]: *** /lib/modules/4.4.36-v7+/build/: Nie ma takiego pliku ani katalogu.
   Stop.
 
-Przygotowanie środowiska do kompilacji
-======================================
+Przygotowanie Raspberry Pi do kompilacji LKM
+============================================
 
 U mnie zadziałała następująca metoda:
 
@@ -153,7 +160,7 @@ było banalnie proste:
 Zarządzanie modułami
 ====================
 
-Linux udostępnia zestaw poleceń do zarządzania modułami jądra, od wyświeltenia listy wykorzystywanych w danej chwili
+Linux udostępnia zestaw poleceń do zarządzania modułami jądra, od wyświetlenia listy wykorzystywanych w danej chwili
 modułów, po ich ładowanie i kasowanie.
 
 Informacja o modułach
@@ -204,7 +211,7 @@ Szczegółowe informacje o danym module uzyskamy korzystając z :bash:`modinfo`:
  parm:           autoconf:Enable IPv6 address autoconfiguration on all interfaces (int)
 
 Mamy informację m.in. o ścieżce do modułu, licencji, autorach, zależnościach czy przekazywanych parametrach. Należy mieć
-na uwadze, że zapewnienie takich informacji jak np. opis czy lista autorów leży w gestii programistów piszących dany moduł,
+na uwadze, że zapewnienie takich informacji jak np. opis czy lista autorów leży w gestii programistów piszących dany moduł.
 
 Ładowanie modułu do pamięci
 ---------------------------
@@ -260,6 +267,3 @@ pliki konfiguracyjne.
  pi@raspberrypi:~ $ sudo modprobe -r dummy
  pi@raspberrypi:~ $ lsmod |grep dummy
  pi@raspberrypi:~ $
-
-
-
