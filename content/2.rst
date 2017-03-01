@@ -14,7 +14,7 @@
   :language: bash
 
 
-W poprzedniej części pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać sposoby
+W poprzedniej części pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby
 komunikacji pomiędzy użytkownikiem a modułami. Zacznę od pisania do logu oraz przekazywania do modułu parametrów z wiersza poleceń.
 
 Hello World

@@ -1,0 +1,469 @@
+﻿:title: Email w pythonie
+:date: 2018-03-01 22:00
+:slug: email-python
+:category: programowanie
+:tags: python, email
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+
+Email jest jedną z popularniejszych form komunikacji, a Python dostarcza w bibliotece standardowej szereg rozwiązań
+umożliwiających łatwą pracę z pocztą elektroniczną. Na przykładzie gmaila postaram się pokazać, jak napisać, wysłać i
+odebrać wiadomość email.
+
+SMTP
+====
+
+SMTP czyli Simple Mail Transfer Protocol jest standardowym protokołem transmisji poczty w internecie. Choć serwery pocztowe
+wykorzystują go zarówno do wysyłania, jak i odbierania wiadomości, aplikacje klienckie korzystają z SMTP do wysyłania
+emaili.
+Poniższy program pokazuje próbę prostej komunikacji z serwerem poczty wychodzącej:
+
+.. code-block:: python
+
+ import smtplib
+ import email.mime.multipart
+ import email.mime.text
+
+ SMTP_SERVER = 'gmail-smtp-in.l.google.com'
+ SMTP_PORT = 25
+
+ message = email.mime.multipart.MIMEMultipart()
+ message['TO'] = raw_input("Enter 'To' email adress: ")
+ message['FROM'] = raw_input("Enter 'From' email address: ")
+ message['Subject'] = raw_input("Enter subject of your email: ")
+
+ message_part = email.mime.text.MIMEText('text', 'plain')
+ payload = raw_input("Enter your message: ")
+ message_part.set_payload(payload)
+
+ message.attach(message_part)
+
+ session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+ session.ehlo()
+ try:
+     session.sendmail(message['FROM'], message['TO'], message.as_string())
+     session.quit()
+ except smtplib.SMTPHeloError as ex:
+     print "Server didn't reply properly to helo"
+     print ex.message
+ except smtplib.SMTPRecipientsRefused as ex:
+     print "Server rejected recipients"
+     print ex.message
+ except smtplib.SMTPSenderRefused as ex:
+     print "Server didn't accept From address"
+     print ex.message
+ except smtplib.SMTPDataError as ex:
+     print "Unexpected error"
+     print ex.message
+ except smtplib.SMTPServerDisconnected as ex:
+     print "Connection closed"
+     print ex.message
+
+Próba uruchomienia kończy się, niestety, porażką:
+
+.. code-block:: bash
+
+ Enter 'To' email adress: username@gmail.com
+ Enter 'From' email address: username@gmail.com
+ Enter subject of your email: Test
+ Enter your message: Hello World!
+ Connection closed
+ Connection unexpectedly closed
+
+ Process finished with exit code 0
+
+Do znalezienia błędu wykorzystamy metodę :pyth:`set_debug_level(level)` jaką udostępnia nam klasa :pyth:`SMTP`.
+Pozwoli ona podejrzeć wszystkie informacje, zarówno wysyłane do serwera jak i od niego otrzymane:
+
+.. code-block:: bash
+
+ Enter 'To' email adress: username@gmail.com
+ Enter 'From' email address: username@gmail.com
+ Enter subject of your email: Test
+ Enter your message: Hello World!
+ send: 'ehlo [192.168.56.1]\r\n'
+ reply: '250-mx.google.com at your service, [46.215.215.74]\r\n'
+ reply: '250-SIZE 157286400\r\n'
+ reply: '250-8BITMIME\r\n'
+ reply: '250-STARTTLS\r\n'
+ reply: '250-ENHANCEDSTATUSCODES\r\n'
+ reply: '250-PIPELINING\r\n'
+ reply: '250 SMTPUTF8\r\n'
+ reply: retcode (250); Msg: mx.google.com at your service, [46.215.215.74]
+ SIZE 157286400
+ 8BITMIME
+ STARTTLS
+ ENHANCEDSTATUSCODES
+ PIPELINING
+ SMTPUTF8
+ send: 'mail FROM:<username@gmail.com> size=340\r\n'
+ reply: '250 2.1.0 OK 88si2341819lfx.293 - gsmtp\r\n'
+ reply: retcode (250); Msg: 2.1.0 OK 88si2341819lfx.293 - gsmtp
+ send: 'rcpt TO:<username@gmail.com>\r\n'
+ reply: '250 2.1.5 OK 88si2341819lfx.293 - gsmtp\r\n'
+ reply: retcode (250); Msg: 2.1.5 OK 88si2341819lfx.293 - gsmtp
+ send: 'data\r\n'
+ reply: '354  Go ahead 88si2341819lfx.293 - gsmtp\r\n'
+ reply: retcode (354); Msg: Go ahead 88si2341819lfx.293 - gsmtp
+ data: (354, 'Go ahead 88si2341819lfx.293 - gsmtp')
+ send: 'Content-Type: multipart/mixed; boundary="===============1757486702=="\r\nMIME-Version: 1.0\r\nTO: username@gmail.com\r\nFROM: username@gmail.com\r\nSubject: Test\r\n\r\n--===============1757486702==\r\nContent-Type: text/plain; charset="us-ascii"\r\nMIME-Version: 1.0\r\nContent-Transfer-Encoding: 7bit\r\n\r\nHello World!\r\n--===============1757486702==--\r\n.\r\n'
+ reply: '421-4.7.0 [46.215.215.74      15] Our system has detected that this message is\r\n'
+ reply: '421-4.7.0 suspicious due to the very low reputation of the sending IP address.\r\n'
+ reply: '421-4.7.0 To protect our users from spam, mail sent from your IP address has\r\n'
+ reply: '421-4.7.0 been temporarily rate limited. Please visit\r\n'
+ reply: '421 4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp\r\n'
+ reply: retcode (421); Msg: 4.7.0 [46.215.215.74      15] Our system has detected that this message is
+ 4.7.0 suspicious due to the very low reputation of the sending IP address.
+ 4.7.0 To protect our users from spam, mail sent from your IP address has
+ 4.7.0 been temporarily rate limited. Please visit
+ 4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp
+ data: (421, '4.7.0 [46.215.215.74      15] Our system has detected that this message is\n4.7.0 suspicious due to the very low reputation of the sending IP address.\n4.7.0 To protect our users from spam, mail sent from your IP address has\n4.7.0 been temporarily rate limited. Please visit\n4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp')
+ send: 'rset\r\n'
+ Connection closed
+ Connection unexpectedly closed: [Errno 10053] Nawiązane połączenie zostało przerwane przez oprogramowanie zainstalowane w komputerze-hoťcie
+
+Jak widać serwer zerwał połączenie ze względów bezpieczeństwa. Trudno zresztą się dziwić, pozwolenie na
+wysyłanie wiadomości bez choćby podstawowej autoryzacji użytkownika byłoby dużym zagrożeniem.
+Spróbujemy więc zabezpieczyć naszą transmisję poprzez TLS :pyth:`SMTP.starttls([keyfile[, certfile])` oraz zautoryzować się loginem
+i hasłem do konta :pyth:`SMTP.login(user, password)`:
+
+.. code-block:: python
+
+ import smtplib
+ import getpass
+ import email.mime.multipart
+ import email.mime.text
+
+ SMTP_SERVER = 'smtp.gmail.com'
+ SMTP_PORT = 587
+
+ message = email.mime.multipart.MIMEMultipart()
+ message['TO'] = raw_input("Enter 'To' email adress: ")
+ message['FROM'] = raw_input("Enter 'From' email address: ")
+ password = getpass.getpass(prompt='Enter password: ")
+ message['Subject'] = raw_input("Enter subject of your email: ")
+
+ message_part = email.mime.text.MIMEText('text', 'plain')
+ payload = raw_input("Enter your message: ")
+ message_part.set_payload(payload)
+ message.attach(message_part)
+
+ server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+ server.set_debuglevel(1)
+ server.ehlo()
+ server.starttls()
+ server.login(message['FROM'], password)
+ server.sendmail(message['FROM'], message['TO'], message.as_string())
+ server.quit()
+
+Niestety, próba wysłania wiadomości kończy się kolejnym błędem:
+
+.. code-block:: bash
+
+ smtplib.SMTPAuthenticationError: (534, '5.7.9 Application-specific password required. Learn more at\n5.7.9  https://support.google.com/mail/?p=InvalidSecondFactor m18sm1211864ljb.8 - gsmtp')
+
+Krótka lektura informacji spod wskazanego w opisie błędu linka wyjaśnia, że problem wynika z dwuskładnikowego uwierzytelniania
+i jego rozwiązaniem jest zautoryzowanie się hasłem wygenerowanym z poziomu ustawień konta. Postępując zgodnie z instrukcją
+otrzymamy ciąg 16-tu znaków, który zastąpi nam nasze hasło do konta. Kolejna próba kończy się sukcesem:
+
+.. code-block:: bash
+
+ send: 'quit\r\n'
+ reply: '221 2.0.0 closing connection 75sm2003575lfy.27 - gsmtp\r\n'
+ reply: retcode (221); Msg: 2.0.0 closing connection 75sm2003575lfy.27 - gsmtp
+
+
+Skoro umiemy już wysłać email, spróbujmy go rozbudować. Stwórzmy np. wiadomość w HTMLu dodając jednocześnie alternatywny czysty tekst:
+
+.. code-block:: python
+
+ message = email.mime.multipart.MIMEMultipart('alternative')
+ text = "Hello!\nWhat's your name?"
+ html = """\
+ <html>
+  <head></head>
+  <body>
+    <h1>Hello!</h1><br>
+    <p>What's your name?</p>
+  </body>
+ </html>
+ """
+ part_plain = email.mime.text.MIMEText(text, 'plain')
+ part_html = email.mime.text.MIMEText(html, 'html')
+
+ message.attach(part_plain)
+ message.attach(part_html)
+
+Analogicznie możemy dołączyć plik binarny, choćby to `zdjęcie <https://commons.wikimedia.org/wiki/File:%22A_Mogul_Trooper%22_(James_S._Virtue_Co.,_London,_1858).jpg#>`_:
+
+.. code-block:: python
+
+ message_part = email.mime.text.MIMEText('text', 'plain')
+ payload = "Look at this is very interesting photo."
+ message_part.set_payload(payload)
+ message.attach(message_part)
+
+ fp = open('trooper.jpg', 'rb')
+ image_part = email.mime.image.MIMEImage(fp.read())
+ message.attach(image_part)
+
+ fp.close()
+
+POP3
+====
+
+Do pobrania wiadomości ze skrzynki może być wykorzystany protokół POP3. Dostęp do niego daje nam moduł :pyth:`poplib`,
+udostępniający klasy :pyth:`POP3(host[, port[, timeout]])` oraz :pyth:`POP3_SSL(host[, port[, keyfile[, certfile]]])`.
+Wykorzystamy oczywiście wersję z szyfrowaniem - taki
+serwer nasłuchuje domyślnie na porcie 995 (w odróżnieniu od zwykłego POP3 nasłuchującego na porcie 110). Jest to o tyle
+ważne, że 'zwykły' POP w ogóle nie szyfruje transmisji - dane, również hasło, przesyłane są czystym tekstem (chyba że
+skorzystamy z komendy APOP).
+
+Spróbujmy więc na początek połączyć się z serwerem:
+
+.. code-block:: python
+
+ import poplib
+ import getpass
+
+ POP3_SERVER = 'pop.googlemail.com'
+ POP3_PORT = '995'
+
+ username = raw_input('Enter your email')
+ password = getpass.getpass('Enter your password')
+
+ mailbox = poplib.POP3_SSL(POP3_SERVER, POP3_PORT)
+ mailbox.user(username)
+ mailbox.pass_(password)
+
+ mailbox.quit()
+
+i od razu spodziewajmy się znanego już błędu:
+
+.. code-block:: bash
+
+ poplib.error_proto: -ERR [AUTH] Application-specific password required: https://support.google.com/accounts/answer/185833
+
+Zastąpienie hasła wygenerowanym wcześniej 'App password' rozwiązuje problem.
+Spróbujmy więc dowiedzieć się od serwera czegoś więcej:
+
+.. code-block:: python
+
+ import poplib
+
+ POP3_SERVER = 'pop.googlemail.com'
+ POP3_PORT = '995'
+ APP_PASSWORD=''
+
+ username = raw_input('Enter your email')
+
+ mailbox = poplib.POP3_SSL(POP3_SERVER, POP3_PORT)
+ mailbox.set_debuglevel(1)
+ mailbox.user(username)
+ mailbox.pass_(password)
+ mailbox_status = mailbox.stat()
+ print "Message count {}, mailbox size {}".format(mailbox.stat()[0], mailbox.stat()[1])
+ print mailbox.list()
+ mailbox.rset()
+ mailbox.quit()
+
+.. code-block:: bash
+
+ Message count 219, mailbox size 204595639
+ ('+OK 219 messages (204595639 bytes)', ['1 17367', '2 43517', '3 17122', (...) , '219 133436'], 2281)
+
+Metoda :pyth:`POP3_SSL.stat()` zwraca status skrzynki w postaci tupli dwóch wartości: ilości wiadomości oraz
+rozmiaru skrzynki. Dużo ciekawsza jest :pyth:`POP3_SSL.list(which=None)`. Zawołana bez żadnego argumentu podaje listę
+wiadomości na serwerze. Zawołana z parametrem podaje wiadomość o przekazanym w parametrze numerze.
+
+Spróbujmy odczytać ostatnią wiadomość z listy, funkcją :pyth:`POP3_SSL.retr(which)`:
+
+.. code-block:: python
+
+ mailbox = poplib.POP3_SSL(POP3_SERVER, POP3_PORT)
+ mailbox.set_debuglevel(1)
+ mailbox.user(username)
+ mailbox.pass_(password)
+ print mailbox.retr(mailbox.stat()[0])
+ mailbox.quit()
+
+.. code-block:: bash
+
+ *cmd* 'USER username@gmail.com'
+ *cmd* 'PASS ****************'
+ *cmd* 'RETR 219'
+ ('+OK message follows', ['Return-Path: <username1@gmail.com>', 'Received: from (..) for <username@gmail.com>',
+ '        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);', '        Mon, 20 Feb 2017 09:17:30 -0800 (PST)',
+ 'Message-ID: <58ab24aa.ce18190a.d70c9.77ee@mx.google.com>',
+ 'Date: Mon, 20 Feb 2017 09:17:30 -0800 (PST)',
+ 'Content-Type: multipart/mixed; boundary="===============0919153568=="', 'MIME-Version: 1.0',
+ 'TO: usernam@gmail.com', 'FROM: username1@gmail.com',
+ 'Subject: Test', 'X-Antivirus: Avast (VPS 170220-1, 20.02.2017), Outbound message', 'X-Antivirus-Status: Clean', 'X-Antivirus: Avast (VPS 170220-2, 20.02.2017),
+ Inbound message', 'X-Antivirus-Status: Clean', '', '--===============0919153568==',
+ 'Content-Type: text/plain; charset="UTF-8"', 'MIME-Version: 1.0', 'Content-Transfer-Encoding: quoted-printable', '',
+ 'This is an important message', '', '---',(...),'', '--===============0919153568==',
+ 'Content-Type: image/jpeg', 'MIME-Version: 1.0', 'Content-Transfer-Encoding: base64', '',
+ '/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a',
+ 'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIy',
+ 'MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAH1AyIDASIA',
+ (...)
+ 'iigAoFFFAB26UdeKKKAE4z0oxRRQAAU09ce9FFAAcA9KTuaKKAEprd6KKAIycDIppHNFFAETDnmo',
+ 'nHzYoooArGTBPH60UUUAf//Z', '--===============0919153568==--'], 133527)
+ *cmd* 'QUIT'
+
+Ostatnią metodą, o której warto wspomnieć, jest :pyth:`POP3_SSL.setdebuglevel(level)`. Wywołana z argumentem równym 1 zapewnia,
+jak wyżej widać, średni poziom logowania. Natomiast z argumentem równym 2 lub większym zapisuje całą komunikację odbywającą
+się na połączeniu kontrolnym:
+
+.. code-block:: python
+
+ mailbox.set_debuglevel(2)
+ mailbox.user(username)
+ mailbox.pass_(APP_PASSWORD)
+ mailbox_status = mailbox.stat()
+ mailbox.quit()
+
+.. code-block:: bash
+
+ *cmd* 'USER usernam@gmail.com'
+ *put* 'USER username@gmail.com'
+ *get* '+OK send PASS\r\n'
+ *resp* '+OK send PASS'
+ *cmd* 'PASS ****************'
+ *put* 'PASS ****************'
+ *get* '+OK Welcome.\r\n'
+ *resp* '+OK Welcome.'
+ *cmd* 'STAT'
+ *put* 'STAT'
+ *get* '+OK 219 204595639\r\n'
+ *resp* '+OK 219 204595639'
+ *stat* ['+OK', '219', '204595639']
+ *cmd* 'QUIT'
+ *put* 'QUIT'
+ *get* '+OK Farewell.\r\n'
+ *resp* '+OK Farewell.'
+
+IMAP
+====
+
+W odróżnieniu od POP3, IMAP nie wymaga ściągnięcia wszystkich wiadomości na komputer lokalny. Transmitowane są jedynie
+same nagłówki wiadomości, treść i załączniki przesyłane są na żądanie użytkownika. IMAP, poza pobraniem wiadomości,
+pozwala na wykonywanie wielu innych operacji, jak tworzenie i zarządzanie katalogami czy kasowanie wiadomości bez konieczności
+ich otwierania.
+
+Przykładowa sesja z użyciem protokołu IMAP może wyglądać tak:
+
+.. code-block:: python
+
+ import imaplib
+
+ IMAP_SERWER = 'imap.googlemail.com'
+ IMAP_PORT = '993'
+ USER_NAME = 'username@gmail.com'
+ APP_PASSWORD = '****************'
+
+ mailbox = imaplib.IMAP4_SSL(IMAP_SERWER, IMAP_PORT)
+ mailbox.debug=0
+ mailbox.login(USER_NAME, APP_PASSWORD)
+ mailbox.select('Inbox')
+ typ, data = mailbox.search(None, 'ALL')
+
+ for n in data[0].split():
+     ms, data = mailbox.fetch(n, ('RFC822'))
+     print data[0][1]
+     ms, data = mailbox.store(n, '+FLAGS', '\\Seen')
+
+ mailbox.close()
+ mailbox.logout()
+
+Jest to prosty program wypisujący zawartość wszystkich wiadomości w skrzynce odbiorczej a następnie oznaczający je jako przeczytane.
+Tak, jak przy POP3, zaczynamy od
+utworzenia szyfrowanego połączenia i, analogicznie do poprzednich przykładów, uwierzytelniamy się adresem email oraz 'App password'.
+Następnie funkcją :pyth:`IMAP4_SSL.select(mailbox='INBOX', readonly=False)` wybieramy skrzynkę, z którą chcemy pracować. Domyślnie są to wiadomości odebrane,
+natomiast nic nie stoi na przeszkodzie, by wybrać np. utworzony w ramach konta pocztowego folder.
+:pyth:`IMAP4_SSL.search(charset, *criteria)` umożliwia przeszukiwanie skrzynki wg zadanych kryteriów, np. :pyth:`search(None, '(FROM "admin" SUBJECT "Warning")'`.
+Parametry polecenia **SEARCH** można znaleźć w `RFC3501 <https://tools.ietf.org/html/rfc3501#section-6.4.5>`_.
+Potem :pyth:`IMAP4_SSL.fetch(message_set, message_parts)` pobiera wskazane elementy wiadomości. W naszym przypadku jest to cała wiadomość,
+tak, jak jest zdefiniowana w RFC822. Można oczywiście pobrać część wiadomości, np. poniższy kod pobiera same nagłówki:
+:pyth:`fetch(n, '(BODY.PEEK[HEADER])')`. Więcej na temat polecenia **FETCH** można znaleźć we wspomnianym `RFC3501 <https://tools.ietf.org/html/rfc3501#section-6.4.5>`_.
+Na koniec funkcją :pyth:`IMAP4_SSL.store(message_set, command, flag_list)` ustawiamy na wiadomościach flagę '\Seen' - wiadomości
+zostają oznaczone jako przeczytane. Listę dostępnych flag jest opisana `tu <https://tools.ietf.org/html/rfc3501.html#section-2.3.2>`_.
+Oczywiście flagi można też zdejmować. Przykładowo, wystarczy użyć '-FLAGS' zamiast
+'+FLAGS': :pyth:`ms, data = mailbox.store(n, '-FLAGS', '\\Seen')`, by wiadomość oznaczyć jako nieprzeczytaną.
+
+Jak już wspomniałem, IMAP daje dużo większe możliwości niż POP3. Możemy, na przykład, pobrać same załączniki w formacie
+jpeg z wybranych wiadomości:
+
+.. code-block:: python
+
+ import imaplib
+ import email
+ import uuid
+
+ IMAP_SERWER = 'imap.googlemail.com'
+ IMAP_PORT = '993'
+ user_name = USER_NAME
+ APP_PASSWORD = '****************'
+
+ mailbox = imaplib.IMAP4_SSL(IMAP_SERWER, IMAP_PORT)
+ mailbox.debug = 0
+ mailbox.login(USER_NAME, APP_PASSWORD)
+ mailbox.select('Inbox')
+ typ, data = mailbox.search(None, '(FROM "me" Subject "Photo")')
+ for n in data[0].split():
+     ms, data = mailbox.fetch(n, ('(RFC822)'))
+     message = email.message_from_string(data[0][1])
+     for part in message.walk():
+         if part.get_content_type() == 'image/jpeg':
+             payload = part.get_payload(decode=True)
+             open(str(uuid.uuid4()) + '.jpg', 'wb').write(payload)
+     typ, data = mailbox.store(n, '+FLAGS', '\\Seen')
+
+ mailbox.close()
+ mailbox.logout()
+
+:pyth:`email.message_from_string(s, args, kws)` parsuje string na obiekt typu :pyth:`email.message.Message()` dający
+interfejs do zarządzania nagłówkami i treścią wiadomości. :pyth:`Message.walk()` jest generatorem umożliwiającym
+iterację poprzez kolejne części wiadomości, w naszym przypadku szukamy elementów typu 'image/jpeg'. Wreszcie, metodą
+:pyth:`Message.get_payload(i[, decode])` pobieramy zawartość załącznika. By uniknąć konfliktów nazw, plik(i)
+zapisujemy pod unikalnymi nazwami będącymi ID zwracanymi przez :pyth:`uuid.uuid4()`
+
+Wysyłanie logów mailem
+======================
+
+Moduł :pyth:`logging` dostarcza bardzo użyteczny handler umożliwiający łatwe wysyłanie wiadomości z logów na
+podane adresy email: :pyth:`logging.handlers.SMTPHandler(mailhost, fromaddr, toaddrs, subject, credentials=None, secure=None)`:
+
+.. code-block:: python
+
+ import logging.handlers
+
+ SMTP_SERVER = 'smtp.gmail.com'
+ SMTP_PORT = 587
+ APP_PASSWORD = ''
+ FROM = 'from@gmail.com'
+ TO = 'to@gmail.com'
+ SUBJECT = 'Important message from logging system'
+
+ logger = logging.getLogger("")
+ logger.setLevel(logging.DEBUG)
+ handler = logging.handlers.SMTPHandler((SMTP_SERVER, SMTP_PORT), FROM, TO, SUBJECT, (FROM, APP_PASSWORD), secure=())
+ handler.setFormatter(logging.Formatter("%(asctime)-15s %(levelname)-5s %(message)s"))
+ logger.addHandler(handler)
+ logger.debug("Some usefull message")
+ logger.error("There is a big error")
+ logger.info("Just ordinary info")
+ logging.shutdown()
+
+Parametr :pyth:`mailhost` może być stringiem z adresem serwera SMTP - użyty będzie wtedy domyślny port lub tuplą z
+adresem serwera i portem. Parametr :pyth:`toaddrs` zawiera listę adresatów oddzieloną przecinkami. Jeśli serwer wymaga
+autoryzacji, do :pyth:`credentials` przekazujemy login i hasło. Wreszcie, by skorzystać z TLS, trzeba do parametru
+:pyth:`secure` przekazać krotkę: pustą lub z nazwą klucza lub nazwą klucza i certyfikatem.
