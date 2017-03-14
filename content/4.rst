@@ -1,0 +1,344 @@
+:title: Raspberry Pi: moduły jądra - część 3
+:date: 2017-03-14 22:00
+:slug: rpi-lkm-part-3
+:category: programowanie
+:tags: c,raspberry pi, kernel
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+Sterowniki do urządzeń znakowych są bardzo popularnym rodzajem modułów. Swoją karierę zawdzięczają zarówno
+prostej do zrozumienia i zaimplementowania zasadzie działania jak i dużej uniwersalności. Umożliwiając bezpośredni
+transfer danych z oraz do przestrzeni użytkownika zachowują się analogicznie do zwykłych plików, zapewniając zapis,
+odczyt oraz przeszukiwanie. Spróbujmy więc przygotować sterownik urządzenia :bash:`\dev\mychar`, który posłuży nam do
+komunikacji pomiędzy modułem jądra a programem z przestrzeni użytkownika.
+
+Dostęp do urządzeń znakowych
+============================
+
+Jak przed chwilą wspomniałem, dostęp do urządzeń znakowych odbywa się poprzez specjalne pliki, zazwyczaj zlokalizowane
+w katalogu :bash:`/dev`:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ ls -l /dev
+ (...)
+ crw-rw-rw- 1 root tty     5,   0 lut 28 22:02 tty
+ crw--w---- 1 root tty     4,   0 lut 28 22:02 tty0
+ crw------- 1 pi   tty     4,   1 lut 28 22:02 tty1
+ crw--w---- 1 root tty     4,  10 lut 28 22:02 tty10
+ crw--w---- 1 root tty     4,  11 lut 28 22:02 tty11
+ crw--w---- 1 root tty     4,  12 lut 28 22:02 tty12
+ crw--w---- 1 root tty     4,  13 lut 28 22:02 tty13
+ crw--w---- 1 root tty     4,  14 lut 28 22:02 tty14
+ crw--w---- 1 root tty     4,  15 lut 28 22:02 tty15
+
+Rzucają się w oczy 2 różnice pomiędzy 'standardowym' widokiem z ls (np. z katalogu domowego) a obecnym:
+
+* nie spotykany gdzie indziej znak **c** w pierwszej kolumnie oznaczający *character device* (jest jeszcze **b** dla *block device*)
+* dwie oddzielone przecinkiem liczby całkowite
+
+Liczby te to powiązane z plikiem specjalnym dwie wartości: *major number* (numer główny urządzenia)
+oraz *minor number* (numer podrzędny urządzenia). Pierwsza wartość identyfikuje sterownik powiązany z urządzeniem, druga
+jest zależna od danego urządzenia i może np. służyć do identyfikacji konkretnego urządzenia fizycznego w sytuacji, gdy
+sterownik obsługuje ich kilka.
+
+Jedną z pierwszych rzeczy, jakie musimy zrobić chcąc skorzystać z naszego sterownika, jest zarejestrowanie go w jądrze.
+Sprowadza się to do przypisania modułowi *major number* podczas jego inicjalizacji. Do zarejestrowania oraz wyrejestrowania
+sterownika służą zadeklarowane w :c:`linux/fs.h` funkcje:
+
+.. code-block:: c
+
+ int register_chrdev(unsigned int major, const char *name, struct file_operations *fops);
+ void unregister_chrdev(unsigned int major, const char *name);
+
+gdzie:
+
+* **major** to wskazany przez nas numer główny. Oczywiście pojawia się pytanie, jak uniknąć konfliktu z istniejącym już być może numerem. Można oczywiście zajrzeć do dokumentacji, ale o wiele lepiej jest skorzystać z dynamicznego przydzielana numeru. Otóż po przekazaniu do funkcji parametru :c:`major` równego 0, jądro *major number* zaalokkuje dynamicznie, co w naszym sterowniku jest rozwiązaniem wystarczającym.
+* **name** to nazwa urządzenia. Zarówno nazwę jak i numer główny dla zerejestrowanych modułów można zobaczyć w pliku :bash:`/proc/devices`:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ head /proc/devices
+ Character devices:
+   1 mem
+   4 /dev/vc/0
+   4 tty
+   5 /dev/tty
+   5 /dev/console
+   5 /dev/ptmx
+   5 ttyprintk
+   7 vcs
+  10 misc
+
+* **fops** to wskaźnik na strukturę :c:`file_operations` zawierającą wskaźniki na funkcje mogące wykonywać operacje na naszym urządzeniu.
+
+Wskaźniki zawarte w :c:`file_operations` wskazują na funkcje, którymi definiujemy poszczególne operacje na plikach, jakie
+będzie wykonywał nasz sterownik. Na nasze potrzeby zaimplementujemy :c:`read`, :c:`write`, :c:`open`, :c:`release`, natomiast
+możliwości jest dużo więcej, drobny fragment struktury może wyglądać tak
+
+.. code-block:: c
+
+ int (*flush) (struct file *, fl_owner_t id);             // called when a process closes its copy of the descriptor
+ int (*release) (struct inode *, struct file *);          // called when a file structure is being released
+ int (*fsync) (struct file *, loff_t, loff_t, int datasync);  // notify device of change in its FASYNC flag
+ int (*aio_fsync) (struct kiocb *, int datasync);         // synchronous notify device of change in its FASYNC flag
+ int (*fasync) (int, struct file *, int);                 // asynchronous notify device of change in its FASYNC flag
+ int (*lock) (struct file *, int, struct file_lock *);    // used to implement file locking
+
+Oczywiście nie ma potrzeby implementować wszystkich tych funkcji. Brak implementacji sprawi, że wskaźniki będą zwyczajnie
+wskazywać na :c:`NULL`, a dane operacje nie będą dostępne:
+
+.. code-block:: c
+
+ static struct file_operations fo = {
+        .open = mychar_dev_open,
+        .read = mychar_dev_read,
+        .write = mychar_dev_write,
+        .release = mychar_dev_release,
+ };
+
+Aby móc skorzystać z naszego urządzenia, musimy utworzyć plik specjalny :bash:`\dev\mychar`. Można wykorzystać do tego celu
+polecenie :bash:`mknod`:
+
+.. code-block:: bash
+
+ #mknod /dev/<driver_interface_name> c <major number> <minor number>
+
+dużo wygodniej jednak będzie skorzystać z funkcji udostępnionych przez jądro.
+
+Zaczynamy od stworzenia struktury :c:`class`, będącej pewnego rodzaju abstrakcję nad implementacją sterownika. Można powiedzieć,
+że klasy grupują urządzenia pod kątem tego, do czego służą a nie pod kątem ich fizycznego sposobu działania czy budowy
+
+.. code-block:: c
+
+ struct class * class_create(struct module *owner, const char *name)
+
+* **owner** - wskaźnik na moduł do którego należy dana klasa
+* **name** - wkaźnik na łańcuch znaków z nazwą klasy
+
+W naszym przypadku będzie to klasa :c:`mychar_class`:
+
+.. code-block:: c
+
+ mychar_dev_class = class_create(THIS_MODULE, "mychar_class");
+          if(IS_ERR(mychar_dev_class)){
+                  unregister_chrdev(major_number, MY_DEVICE_NAME);
+                  printk(KERN_ALERT, "mychar_dev: fail while register device class");
+                  return PTR_ERR(mychar_dev_class);
+          }
+
+Po załadowaniu modułu, w katalaogu :bash:`/sys/class` można sprawdzić, że klasa rzeczywiście została utworzona:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo ls -l /sys/class/mychar_class
+ razem 0
+ lrwxrwxrwx 1 root root 0 mar  8 20:43 mychar -> ../../devices/virtual/mychar_class/mychar
+ pi@raspberrypi:~ $ sudo ls -l /sys/devices/virtual/mychar_class/mychar/
+ razem 0
+ -r--r--r-- 1 root root 4096 mar  8 20:44 dev
+ drwxr-xr-x 2 root root    0 mar  8 20:44 power
+ lrwxrwxrwx 1 root root    0 mar  8 20:44 subsystem -> ../../../../class/mychar_class
+ -rw-r--r-- 1 root root 4096 mar  8 20:41 uevent
+
+Do usunięcia natomiast wcześniej stworzonej klasy służy funkcja:
+
+.. code-block:: c
+
+ void class_destroy (struct class *class);
+
+Teraz możemy powołać do życia urządzenie i zarejestrować je w SysFS:
+
+.. code-block:: c
+
+ struct device *device_create(struct class *cls, struct device *parent, dev_t devt, void *drvdata,
+                             const char *fmt, ...);
+
+* **cls** - wskaźnik na klasę, z którą będzie skojarzone urządzenie
+* **parent** - wskaźnik na urządzenie nadrzędne (o ile istnieje)
+* **devt** - reprezentacja głównego oraz podrzędnego numeru urządzenia
+* **drvdata** - dane na potrzeby wywołań zwrotnych, np. używanych przez jądro podczas komunikacji z udziałem SysFS
+* **fmt** - nazwa urządzenia
+
+Poniższy fragment kodu tworzy plik urządzenia :bash:`/dev/mychar`. Nie trzeba wołać z przestrzeni użytkownika polecenia
+:bash:`mknod` - wszystko dzieje się w przestrzeni jądra.
+
+.. code-block:: c
+
+ mychar_dev = device_create(mychar_dev_class, NULL, MKDEV(major_number, 0), NULL, "mychar");
+          if (IS_ERR(mychar_dev)){
+                  class_destroy(mychar_dev_class);
+                  unregister_chrdev(major_number, "mychar");
+                  printk(KERN_ALERT "Failed to create the device\n");
+                  return PTR_ERR(mychar_dev);
+          }
+
+Makro :c:`MKDEV(int major, int minor)` zamienia numery główny i podrzędny na typ :c:`dev_t` - 32 bity bez znaku. W drugą stronę
+natomiast można skorzystać z makr:
+
+.. code-block:: c
+
+ MAJOR(dev_t dev);
+ MINOR(dev_t dev);
+
+Po załadowaniu sterownika można sprawdzić, że nowe urządzenie rzeczywiście zostało wykreowane:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo grep mychar /proc/devices
+ 243 mychar
+
+Do usunięcia urządzenia służy funkcja:
+
+.. code-block:: c
+
+ void device_destroy (struct class * class, dev_t devt);
+
+Następnie zaimplementujemy funkcje wskazywane przez :c:`file_operations`. Na początek funkcja wykonywana za każdym razem,
+gdy urządzenie jest otwierane przez program z przestrzeni użytkownika:
+
+.. code-block:: c
+
+ static int mychar_dev_open(struct inode *inode, struct file *file){
+          printk(KERN_INFO "mychar_dev: device opened\n");
+          return 0;
+ }
+
+* **inode** - wskaźnik na i-węzeł
+* **file** - wskaźnik na plik
+
+Jak widać funkcja nie implementuje większej logiki, zrzuca jedynie do logu informację o otworzeniu pliku. W analogiczny
+sposób napiszemy funkcję wykonywaną przy zamknięciu/zwolnieniu urządzenia:
+
+.. code-block:: c
+
+ static int mychar_dev_release(struct inode *inode, struct file *file){
+          printk(KERN_INFO "mychar_dev: device closed\n");
+          return 0;
+ }
+
+Następnie zaimplementujemy funkcję wykonywaną podczas odczytu danych z urządzenia, np. gdy dane są wysyłane do przestrzeni użytkownika:
+
+.. code-block:: c
+
+ static ssize_t mychar_dev_read(struct file * filep, char * buff, size_t buff_len, loff_t * offset){
+          int ret = 0;
+          ret = copy_to_user(buff, msg, msg_length);
+          if(ret==0){
+                  printk(KERN_INFO "mychar_dev: %d bytes send to client\n");
+                  return(msg_length=0);
+          }
+          else{
+                  printk(KERN_ALERT "mychar_dev: failed while send data\n");
+                  return -EFAULT;
+          }
+ }
+
+* **filep** - wskaźnik na plik
+* **buff** - wskaźnik na bufor do którego funkcja zapisze dane
+* **buff_len** - długość bufora
+* **offset** - offset (o ile jest wymagany)
+
+Sercem powyższego fragmentu kodujest wywołanie funkcji kopiującej dane z przestrzeni jądra do przestrzeni użytkownika:
+
+.. code-block:: c
+
+ unsigned long copy_to_user (void __user * to, const void * from, unsigned long n);
+
+* **to** - wskaźnik na adres docelowy, w przestrzeni użytkownika
+* **from** - wskaźnik na adres źródłowy, w przestrzeni jądra
+* **n** - ilość bajtów do skopiowania
+
+Funkcja :c:`copy_to_user()` zwraca ilość nieskopiowanych bajtów lub, w razie powodzenia, zero. Jej wywołanie jest niezbędne,
+bezpośrednia próba skopiowania danych z przestrzeni jądra do przestrzeni użytkownika zakończyłaby się błędem naruszenia
+ochrony pamięci.
+
+Na koniec zaimplementujemy funkcję wykonywaną podczas zapisu do urządzenia z przestrzeni użytkownika.
+
+.. code-block:: c
+
+ static ssize_t mychar_dev_write(struct file * filep, const char * buff, size_t buff_len, loff_t * offset){
+          sprintf(msg, "%s",buff);
+          msg_length = strlen(msg);
+          printk(KERN_INFO "mychar_dev: Received %Iu characters from client\n",msg_length);
+          return buff_len;
+ }
+
+W kontekście wcześniejszych opisów jest raczej samowyjaśniająca się. Dobrze znaną funkcją :c:`sprintf` kopiujemy dane
+z przestrzeni użytkownika do zmiennej :c:`msg` zadeklarowanej w przestrzeni jądra i zrzucamy je do logu.
+
+Klient
+======
+Moduł jest zbudowany i załadowany do pamięci, natomiast nie mamy jeszcze możliwości komunikacji z nim.
+Przygotujmy więc program, który pobierze od użytkownika ciąg znaków, zapisze do naszego urządzenia :bash:`/dev/mychar` i po
+kilku sekundach odczyta i wypisze odpowiedź:
+
+.. code-block:: c
+
+ #include<stdio.h>
+ #include<stdlib.h>
+ #include<errno.h>
+ #include<fcntl.h>
+ #include<string.h>
+ #include<unistd.h>
+
+ #define MAX_BUFFER_LEN 255
+ static char receive[MAX_BUFFER_LEN];
+
+ int main(){
+        int ret, fd;
+        char buffer[MAX_BUFFER_LEN];
+        printf("Opening character device\n");
+        fd = open("/dev/mychar", O_RDWR);
+        if (fd < 0){
+                perror("Failed to open the device.");
+                return errno;
+        }
+        printf("Type text to send to kernel:\n");
+        scanf("%[^\n]%*c", buffer);
+        printf("Writing message to the device [%s].\n", buffer);
+        ret = write(fd, buffer, strlen(buffer));
+        if (ret < 0){
+                perror("Failed to write the message to the device.");
+                return errno;
+        }
+        sleep(5);
+        printf("Wait 5 seconds for reading back from the device.\n");
+        printf("Reading from the device...\n");
+        ret = read(fd, receive, MAX_BUFFER_LEN);
+        if (ret < 0){
+                perror("Failed to read the message from the device.");
+                return errno;
+        }
+        printf("The read message is: [%s]\n", receive);
+        return 0;
+ }
+
+Powyższe rozwiązanie działa:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $ sudo ./char_device_client
+ Opening character device
+ Type text to send to kernel:
+ Some important data
+ Writing message to the device [Some important data].
+ Wait 5 seconds for reading back from the device.
+ Reading from the device...
+ The read message is: [My message is:[Some important data]]
+ pi@raspberrypi:~ $ tail -4 /var/log/kern.log
+ Mar 14 21:23:50 raspberrypi kernel: [ 4901.801790] mychar_dev: device opened
+ Mar 14 21:23:58 raspberrypi kernel: [ 4909.836530] mychar_dev: Received 19 characters from client
+ Mar 14 21:24:03 raspberrypi kernel: [ 4914.836803] mychar_dev: 35 bytes send to client
+ Mar 14 21:24:03 raspberrypi kernel: [ 4914.837362] mychar_dev: device closed
+ pi@raspberrypi:~ $
+
+aczkolwiek z pewnymi zastrzeżeniami: wymaga uprawnień roota oraz nie jest odporne na problemy związane ze współbieżnością.
+Ale o tym w następnym `odcinku <{filename}/5.rst>`_.
