@@ -1,5 +1,5 @@
 ﻿:title: Email w pythonie
-:date: 2018-03-01 22:00
+:date: 2017-03-01 22:00
 :slug: email-python
 :category: programowanie
 :tags: python, email

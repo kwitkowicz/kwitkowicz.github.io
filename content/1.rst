@@ -22,7 +22,7 @@ z przestrzeni jądra, co ogranicza rozmiar samego jądra oraz znacznie ułatwia 
 Moduł jądra można więc traktować jako koncepcję analogiczną od sterownika w DOS/Windows, choć obsługuje nie tylko urządzenia -
 może bezpośrednio pisać/czytać z systemu plików.
 
-Wbrew pozorom, napisanie własnego modułu jądra nie jest rzeczą nie wiadomo jak skomplikowaną. Zasadniczo wystarcza
+Wbrew pozorom, napisanie własnego modułu jądra nie jest rzeczą bardzo skomplikowaną. Zasadniczo wystarcza
 znajomość C, by poradzić sobie z takim zadaniem. Postaram się pokazać w kilku przykładach, jak, wykorzystując Raspberry Pi,
 stworzyć własny moduł.
 
@@ -51,7 +51,7 @@ załadować i usunąć z jądra Linuxa.
 
 Kod, choć zajmuje kilka linijek, jest całkiem ciekawy. Przede wszystkim rzuca się w oczy brak funkcji :c:`main()`. Wynika
 to z faktu, iż moduły nie wykonują się sekwencyjnie. Ich głównym zadaniem jest oczekiwanie na konkretne żądania i ich
-obsługa - tak, jak w programowaniu sterowanym zdarzeniami. Widać też niespotykane gdzie indziej makra
+obsługa - tak, jak w programowaniu sterowanym zdarzeniami. Kolejną różnicą sią makra
 :c:`module_init()` oraz :c:`module_exit()` służące do zarejestrowania funkcji wykonujących się kolejno podczas
 ładowania i usuwania modułu. Różnic pomiędzy tradycyjną aplikacją a modułem jądra jest oczywiście więcej. Przede wszystkim
 moduły 'żyją' w przestrzeni jądra a nie w przestrzeni użytkownika. Komunikacja pomiędzy przestrzeniami odbywa się
@@ -99,8 +99,10 @@ Niestety, bardziej prawdopodobny będzie błąd kompilacji wynikający z braku k
  make[1]: *** /lib/modules/4.4.36-v7+/build/: Nie ma takiego pliku ani katalogu.
   Stop.
 
-Przygotowanie Raspberry Pi do kompilacji LKM
-============================================
+Przygotujmy więc Raspberry Pi do kompilacji LKM...
+
+Budowa środowiska developerskiego
+=================================
 
 U mnie zadziałała następująca metoda:
 
@@ -267,3 +269,7 @@ pliki konfiguracyjne.
  pi@raspberrypi:~ $ sudo modprobe -r dummy
  pi@raspberrypi:~ $ lsmod |grep dummy
  pi@raspberrypi:~ $
+
+
+Zobaczyliśmy, w jaki sposób przygotować Raspberry do kompilacji prostego modułu oraz jak takim modułem zarządzać.
+W następnej `części <{filename}/2.rst>`_ pokażę prosty sposób na komunikację z modułem.

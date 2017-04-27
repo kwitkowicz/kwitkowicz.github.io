@@ -14,7 +14,7 @@
   :language: bash
 
 
-W poprzedniej części pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby
+W poprzedniej `częśc <{filename}/1.rst>`_ pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby
 komunikacji pomiędzy użytkownikiem a modułami. Zacznę od pisania do logu oraz przekazywania do modułu parametrów z wiersza poleceń.
 
 Hello World
@@ -139,7 +139,7 @@ module_param_array
 Do modułu można również przekazać listę parametrów, która będzie przechowywana w zwykłej tablicy. Służy do tego
 makro :c:`module_param_array(name, type, nump, perm)`. Parametry :c:`name, type, perm` są analogiczne do tych z :c:`module_param`.
 Nowością jest parametr **nump** - wskaźnik na zmienną typu integer w której jądro będzie przechowywać ilość przekazanych elementów listy.
-Należy pamiętać, by tablica wskazywana prze parametr :c:`name` była zaalokowana statycznie - jądro musi znać rozmiar tablicy na etapie
+Należy pamiętać, by tablica wskazywana prze parametr :c:`name` była zaalokowana statycznie - rozmiar tablicy musi być znany na etapie
 kompilacji.
 
 Analogicznie do :c:`module_param` możliwe jest użycie parametrów nazwanych - służy do tego makro :c:`module_param_array_named(name, array, type, nump, perm)`.
@@ -180,3 +180,4 @@ powłokę i insmod przekaże następujący argument :bash:`string=Hi there!`. J�
 natomiast 'there!' zostanie uznane za kolejny (nierozpoznany) argument. Aby tego uniknąć wystarczy otoczyć podwójny
 cudzysłów pojedynczym: :bash:`sudo insmod cli_arguments.ko string='"Hi there"'`.
 
+W następnej `cześci <{filename}/4.rst>`_ pokażę prosty sposób na komunikację z modułem.

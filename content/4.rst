@@ -113,7 +113,7 @@ polecenie :bash:`mknod`:
 
 dużo wygodniej jednak będzie skorzystać z funkcji udostępnionych przez jądro.
 
-Zaczynamy od stworzenia struktury :c:`class`, będącej pewnego rodzaju abstrakcję nad implementacją sterownika. Można powiedzieć,
+Zaczynamy od stworzenia struktury :c:`class`, będącej pewnego rodzaju abstrakcją nad implementacją sterownika. Można powiedzieć,
 że klasy grupują urządzenia pod kątem tego, do czego służą a nie pod kątem ich fizycznego sposobu działania czy budowy
 
 .. code-block:: c
@@ -341,4 +341,4 @@ Powyższe rozwiązanie działa:
  pi@raspberrypi:~ $
 
 aczkolwiek z pewnymi zastrzeżeniami: wymaga uprawnień roota oraz nie jest odporne na problemy związane ze współbieżnością.
-Ale o tym w następnym `odcinku <{filename}/5.rst>`_.
+Ale o tym w następnym `odcinku <{filename}/6.rst>`_.
