@@ -1,0 +1,185 @@
+:title: O problemach z errno słów kilka
+:date: 2017-06-07 21:00
+:slug: errno
+:category: programowanie
+:tags: c, linux, kernel
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+W ramach przypomnienia
+======================
+
+Błąd jest sygnalizowany poprzez zwracaną wartość funkcji oraz opisywany poprzez zmienną
+globalną :c:`errno`. Informację o błędzie funkcje przekazują odpowiednią wartością kodu powrotu (zazwyczaj -1, lub,
+dla funkcji zwracających wskaźnik, wartością NULL), natomiast wartość ta nie dostarcza żadnych informacji na temat przyczyn
+jej wystąpienia. W tym celu należy skorzystać ze zmiennej :c:`errno`.
+
+Problem 1
+=========
+
+Mało kto pamięta, że wartość zmiennej errno może zmodyfikować dowolne wywołanie funkcji bibliotecznej lub systemowej.
+Rozważmy taki oto lekko idiotyczny, i, co ważniejsze, **błędny**, fragment kodu, którego celem jest wyłapanie nieprawidłowego
+deskryptora pliku.
+
+.. code-block:: c
+
+  #include<stdio.h>
+  #include<unistd.h>
+  #include<errno.h>
+  #include<fcntl.h>
+
+  extern int errno;
+
+  int main(int argc, char * argv[])
+  {
+          int fd = -3; /* fake file descriptor */
+          int log_fd = open("my.log", O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
+
+          if(close(fd) == -1){
+                  write(log_fd,"Problem with close!\n",19);
+                  if (errno == EBADF){
+                          fprintf(stderr, "Bad file descriptor!\n");
+                  }
+                  else{
+                          perror("close");
+                  }
+                  close(log_fd);
+          }
+          return 0;
+  }
+
+Po skompilowaniu i uruchomieniu powinniśmy, zgodnie z oczekiwaniami, dowiedzieć się o niewłaściwym deskryptorze pliku:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~/c/err $ ./test1
+ Bad file descriptor!
+ pi@raspberrypi:~/c/err $ tail my.log
+ Problem with close!
+ pi@raspberrypi:~/c/err $
+
+Dlaczego więc ten program jest błędny? Aby to sprawdzić, spróbujmy lekko go zmodyfikować, wywołując błąd w funkcji :c:`write`:
+
+.. code-block:: c
+
+ write(log_fd,"Problem with close!\n",-20);
+
+Tym razem informacja o błędzie jest inna:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~/c/err $ ./test2
+ close: Bad address
+ pi@raspberrypi:~/c/err $
+
+Co się stało? Otóż funkcja :c:`write` otrzymawszy błędną wartość parametru count, ustawiła :c:`errno` na wartość EFAULT.
+My tymczasem cały czas zakładamy, że :c:`errno` zostało ustawione przez funkcję :c:`close`.
+Jak uniknąć takiego błędu? Należy zachować wartość :c:`errno` pomiędzy wywołaniami funkcji:
+
+.. code-block:: bash
+
+ #include<stdio.h>
+ #include<unistd.h>
+ #include<errno.h>
+ #include<fcntl.h>
+
+ extern int errno;
+ FILE * f;
+
+ int main(int argc, char * argv[])
+ {
+        int fd = -3; /* fake file descriptor */
+        int log_fd = open("my.log", O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
+
+        if(close(fd) == -1){
+                const int err = errno;
+                write(log_fd,"Problem with close\n",-20);
+                if (err == EBADF){
+                        fprintf(stderr, "Bad file descriptor!\n");
+                }
+                else{
+                        perror("close");
+                }
+                close(log_fd);
+        }
+        return 0;
+ }
+
+Tym razem, po skompilowaniu i uruchomieniu programu, dowiadujemy się o problemie z deskryptorem pliku:
+
+.. code-block:: bash
+
+ pi@raspberrypi:~/c/err $ ./test3
+ Bad file descriptor!
+
+Błędy tego typu nie są powszechne, ale kiedy się już zdarzą, znalezienie ich przyczyny potrafi kosztować sporo wysiłku.
+
+Problem 2
+=========
+
+Czy poniższy kod jest poprawny?
+
+.. code-block:: c
+
+ result = strtol(arg, NULL, 0);
+ if(result == -1)
+         perror("strtol");
+
+Otóż nie, gdyż istnieją funkcje (jak powyższa), dla których cały zakres zwracanych wartości jest poprawny. W takiej sytuacji należy pamiętać o
+wyzerowaniu zmiennej :c:`errno` przed zawołaniem funkcji, a po jej użyciu, ponownym sprawdzeniu :c:`errno`:
+
+.. code-block:: c
+
+ errno = 0;
+ ret = strtol(arg, NULL, 0);
+ if (errno)
+         perror("strtol");
+
+Skoro już jesteśmy przy :c:`strtol(const char *nptr, char **endptr, int base)`, można wspomnieć o jeszcze jej jednej, ciekawej właściwości.
+Mianiowicie funkcja ta ustawia :c:`errno` jedynie w sytuacji przepełnienia (na kod **ERANGE**). Natomiast by stwierdzić błąd parsowania
+przekazanego napisu, należy sprawdzić wskaźnik :c:`endptr`:
+
+.. code-block:: c
+
+ const char * str = "foobar";
+ long int ret = 0;
+ char * ptr;
+
+ errno = 0;
+ ret = strtol(str, &ptr, 0);
+ if(errno)
+        perror("strtol");
+ if(ptr == str)
+        printf("No conversion");
+ else if (ptr == '\0')
+        printf("The whole string has been converted");
+ else
+        printf("Ptr point to unconverted rest of the string");
+
+Jak łatwo można się przekonać, dla
+
+.. code-block:: c
+
+ const char * str = "foobar";
+
+otrzymamy komunikat **"No conversion"**. Dla:
+
+.. code-block:: c
+
+ const char * str = "111fobar";
+
+wynikiem będzie komunikat **"Ptr point to unconverted rest of the string"**. Natomiast gdy będziemy chcieli sparsować zbyt
+dużą wartość:
+
+.. code-block:: c
+
+ const char * str = "9999999999999999";
+
+:c:`errno` zostanie ustawione na **ERANGE** o czym program nas poinformuje komunikatem **"strtol: Numerical result out of range"**
