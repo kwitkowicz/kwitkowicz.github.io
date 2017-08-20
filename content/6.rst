@@ -1,0 +1,267 @@
+:title: lseek
+:date: 2017-08-20 21:00
+:slug: lseek
+:category: programowanie
+:tags: c, linux, kernel
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+Czy rozmiar wszystkich plików w systemie plików może być większy niż rozmiar fizycznie zapisanych na dysku danych? Okazuje się, że
+tak. A w jaki sposób uzyskać ten efekt, można przeczytać poniżej.
+
+W większości przypadków operacje we/wy na pliku wykonywane są liniowo. Niekiedy jednak potrzebujemy nieliniowego poruszania
+się po pliku - z pomocą przychodzi funkcja :c:`lseek()` umożliwiająca ustawienie się w pliku na dowolnej pozycji:
+
+
+.. code-block:: c
+
+ #include <sys/types.h>
+ #include <unistd.h>
+
+ off_t lseek (int fd, off_t pos, int origin);
+
+Nie robi ona nic innego poza zmianą pozycji w pliku; w przypadku sukcesu zwraca nowe położenie w pliku, w przypadku błędu
+zwraca -1 i ustawia :c:`errno`. Zachowanie funkcji jest zależne od wartości parametru :c:`origin`
+
+* **SEEK_CUR** - nowa pozycja w pliku będzie sumą aktualnej pozycji oraz wartości parametru :c:`pos`. Parametr ten może przyjmować wartości zarówno dodatnie jak i ujemne, w przypadku zera pozycja nie zostanie zmieniona
+* **SEEK_END** - nowa pozycja w pliku będzie sumą długości pliku oraz wartości parametru :c:`pos`. Parametr ten możę przyjmować wartości zarówno dodatnie jak i ujemne, w przypadku zera pozycja zostanie ustawiona na końcu pliku.
+* **SEEK_SET** - nowa pozycja w pliku zostanie ustawiona na wartość parametru :c:`pos`. W przypadku zera pozycja będzie ustalona na początku pliku.
+
+Przykładowy program kolejno: ustawia się na żądaną pozycję w pliku, przesuwa pozycję na koniec, odczytuje pozycję w pliku,
+cofa się względem końca pliku i ustawia pozycję na początek pliku:
+
+.. code-block:: c
+
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <fcntl.h>
+  #include <errno.h>
+  #include <sys/types.h>
+  #include <unistd.h>
+
+  int main(int argc, char* argv[])
+  {
+          int fd;
+          char buf;
+          int r;
+          off_t ret;
+
+          if(argc != 2 ) {
+                  printf("Usage: test file_name");
+                  return EXIT_FAILURE;
+          }
+
+          fd = open(argv[1], O_RDONLY);
+          if(fd == -1){
+                  perror("open");
+                  return EXIT_FAILURE;
+          }
+          ret = lseek(fd, (off_t) 10, SEEK_SET);
+          if(ret == (off_t) - 1){
+                  perror("lseek1");
+                  return EXIT_FAILURE;
+          }
+          while((r=read(fd,&buf,1))==1){
+                  putchar(buf);
+                  return EXIT_FAILURE;
+          }
+          ret = lseek(fd, 0, SEEK_END);
+          if(ret == (off_t) -1){
+                  perror("lseek2");
+                  return EXIT_FAILURE;
+          }
+          ret = lseek(fd, 0, SEEK_CUR);
+          if(ret == (off_t) -1){
+                  perror ("lseek3");
+                  return EXIT_FAILURE;
+          }
+          printf("pos: %ld\n",ret);
+          ret = lseek(fd, (off_t) -4, SEEK_CUR);
+          if(ret == (off_t) - 1){
+                  perror("lseek4");
+                  return EXIT_FAILURE;
+          }
+          while((r=read(fd,&buf,1))==1){
+                  putchar(buf);
+          }
+          ret = lseek(fd, 0, SEEK_SET);
+          if(ret == (off_t) -1){
+                  perror("lseek5");
+                  return EXIT_FAILURE;
+          }
+          while((r=read(fd,&buf,1))==1){
+                  putchar(buf);
+          }
+
+          close(fd);
+          return EXIT_SUCCESS;
+  }
+
+.. code-block:: bash
+
+ pi@raspberrypi:~ $
+ pi@raspberrypi:~ $ gcc seek_test.c -o seek_test
+ pi@raspberrypi:~ $ cat file
+ 1234567890abcdefghijklmnopqrst
+ pi@raspberrypi:~ $ ./seek_test file
+ abcdefghijklmnopqrst
+ pos: 31
+ rst
+ 1234567890abcdefghijklmnopqrst
+ pi@raspberrypi:~ $
+
+Jak widać, funkcję :c:`lseek()` najczęściej wykorzystuje się do przeszukiwania pliku od początku lub końca oraz do ustalania
+pozycji w pliku. Pojawia się natomiast pytanie, co stanie się, gdy przesuniemy wskaźnik poza koniec pliku?
+
+.. code-block:: c
+
+ ret = lseek(fd, (off_t) 1024, SEEK_END);
+
+Otóż samo przeszukiwanie pliku poza jego końcem (o 1024 bajtów za daleko w powyższym przykładzie) nic nie zmienia - po prostu
+próba odczytu z takiego miejsca zwróci :c:`EOF`. Ale, jeśli w tym miejscu spróbujemy coś zapisać, stworzony zostanie nowy, wypełniony zerami
+obszar danych pomiędzy poprzednią i nową długością pliku. To uzupełnienie zerami nazywane jest luką (*hole*) i nie zajmuje fizycznie
+miejsca na dysku. W związku z tym rozmiar plików w systemie plików może być większy niż rozmiar fizycznie zapisanych danych.
+Takie pliki z lukami nazywane są plikami rzadkimi (*sparse files*).
+
+Poniższy przykład pokazuje, jak przy użyciu :c:`lseek()` stworzyć plik rzadki:
+
+.. code-block:: c
+
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <fcntl.h>
+  #include <errno.h>
+  #include <sys/types.h>
+  #include <unistd.h>
+
+  int main(int argc, char* argv[])
+  {
+          int fd;
+          off_t ret;
+
+          fd = open("sparse.tmp", O_RDWR | O_CREAT, 0777);
+          if(fd == -1){
+                  perror("open");
+                  return EXIT_FAILURE;
+          }
+          ret = lseek(fd, (off_t) 1024, SEEK_END);
+          if(ret == (off_t) - 1){
+                  perror("lseek");
+                  return EXIT_FAILURE;
+          }
+          if(write(fd, " ", 1) != 1){
+                  perror("write");
+                  return EXIT_FAILURE;
+          }
+
+          close(fd);
+
+          return EXIT_SUCCESS;
+  }
+
+.. code-block:: bash
+
+ pi@raspberrypi: $ gcc sparse_test.c -o sparse_test
+ pi@raspberrypi: $ ./sparse_test
+ pi@raspberrypi: $ ls -l sparse.tmp
+ -rwxr-xr-x 1 pi pi 1025 lip  5 22:18 sparse.tmp
+ pi@raspberrypi: $ du sparse.tmp
+ 4       sparse.tmp
+ pi@raspberrypi: $
+
+Jak widać :bash:`du` jest 'odporne' na dziury w plikach i, w odróżnieniu od :bash:`ls` pokazuje fizyczny
+rozmiar pliku.
+
+Oczywiście nie każdy system umożliwia stworzenie plików rzadkich. Aby to sprawdzić, możemy wykonać następujący test:
+
+.. code-block:: bash
+
+ pi@raspberrypi: $ dd if=/dev/zero of=/tmp/sparse.txt bs=1k seek=1024 count=1
+ 1+0 przeczytanych recordów
+ 1+0 zapisanych recordów
+ skopiowane 1024 bajty (1,0 kB), 0,00162051 s, 632 kB/s
+ pi@raspberrypi: $ ls -l /tmp/sparse.txt
+ -rw-r--r-- 1 pi pi 1049600 lip  5 22:26 /tmp/sparse.txt
+ pi@raspberrypi: $ du -lh /tmp/sparse.txt
+ 4,0K      /tmp/sparse.txt
+ pi@raspberrypi: $
+
+Pomijamy 1024 bloki po 1k a następnie zapisujemy 1024 bajty. W przypadku pliku rzadkiego :bash:`du` pokaże kilka kB, w przeciwnym
+razie ponad MB.
+
+
+To, czy plik jest rzadki, możemy też zbadać programowo, wykorzystując funkcję :c:`stat()` - wystarczy sprawdzić, czy wielkość
+pliku (:c:`st_size`) jest większa od iloczynu liczby bloków (:c:`st_blocks`) i rozmiaru pojedynczego bloku (:c:`st_blksize`):
+
+.. code-block:: c
+
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <sys/stat.h>
+ #include <errno.h>
+
+ int main(int argc, char* argv[])
+ {
+        struct stat st = {0};
+
+        int result = stat("/tmp/sparse.txt", &st);
+        if (result == -1){
+                perror("stat()");
+                return EXIT_FAILURE;
+        }
+        else
+        {
+                printf("file size in bytes: %ld \n", st.st_size);
+                printf("number of blocks: %ld \n", st.st_blocks);
+                printf("block size: %ld \n", st.st_blksize);
+
+                if (st.st_size > (st.st_blksize * st.st_blocks))
+                        printf("file is a sparse file\n");
+        }
+        return EXIT_SUCCESS;
+ }
+
+.. code-block:: bash
+
+ pi@raspberrypi: $ gcc sparse_check.c -o sparse_check
+ pi@raspberrypi: $ ./sparse_check
+ file size in bytes: 1049600
+ number of blocks: 8
+ block size: 4096
+ file is a sparse file
+ pi@raspberrypi: $
+
+|
+|Dużą zaletą plików rzadkich jest to, iż oszczędzają one miejsce na dysku. Powierzchnia dyskowa jest alokowana tylko wtedy,
+gdy jest potrzebna. Pozwalają one również skrócić czas potrzebny na założenie pliku - system nie musi alokować 'miejsca na zera'.
+Stąd pliki te są używane np. przy tworzeniu migawek baz danych, plików z logami, czy też obrazów dysków. Spotkać się można
+z nimi choćby korzystając z maszyny wirtualnej: w poniższym przypadku obraz systemu liczy 100GB, ale sam plik zajmuje fizycznie kilka gigabajtów
+
+.. image:: {filename}/images/virtual_box.jpg
+
+.. image:: {filename}/images/fs.jpg
+
+|
+|
+|Sparse files nie są jedynie domeną systemów UN*X. W systemie NTFS pliki tego typu możemy utworzyć komendą :bash:`fsutil`:
+
+.. code-block:: bash
+
+ c:\dev>fsutil File CreateNew temp 0x100000
+ File c:\dev\temp is created
+
+ c:\dev>fsutil Sparse SetFlag temp
+
+ c:\dev>fsutil Sparse SetRange temp 0 0x100000
+
+.. image:: {filename}/images/win_sparse.jpg
+
+Oczywiście WinApi również udostępnia odpowiednie metody (kod :c:`FSCTL_SET_SPARSE` dla funkcji :c:`DeviceIoControl()`),
+ale to już temat na oddzielną notkę.
