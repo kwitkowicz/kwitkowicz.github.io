@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="polish" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Raspberry Pi: moduły jądra - część 2 - Krzysiek Witkowicz</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="/posts/2017/02/13/rpi-lkm-part-2.html">
+
+        <meta name="author" content="Krzysiek Witkowicz" />
+        <meta name="keywords" content="c,raspberry pi,kernel" />
+        <meta name="description" content="W poprzedniej częśc pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby komunikacji pomiędzy użytkownikiem a modułami. Zacznę od pisania do logu oraz przekazywania do modułu parametrów z wiersza poleceń. Hello World W sumie jet to program od którego należałoby zacząć - wypisanie przywitania, w …" />
+
+        <meta property="og:site_name" content="Krzysiek Witkowicz" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Raspberry Pi: moduły jądra - część 2"/>
+        <meta property="og:url" content="/posts/2017/02/13/rpi-lkm-part-2.html"/>
+        <meta property="og:description" content="W poprzedniej częśc pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby komunikacji pomiędzy użytkownikiem a modułami. Zacznę od pisania do logu oraz przekazywania do modułu parametrów z wiersza poleceń. Hello World W sumie jet to program od którego należałoby zacząć - wypisanie przywitania, w …"/>
+        <meta property="article:published_time" content="2017-02-13" />
+            <meta property="article:section" content="programowanie" />
+            <meta property="article:tag" content="c" />
+            <meta property="article:tag" content="raspberry pi" />
+            <meta property="article:tag" content="kernel" />
+            <meta property="article:author" content="Krzysiek Witkowicz" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz ATOM Feed"/>
+
+        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Krzysiek Witkowicz            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/category/programowanie.html">Programowanie</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/posts/2017/02/13/rpi-lkm-part-2.html"
+                       rel="bookmark"
+                       title="Permalink to Raspberry Pi: moduły jądra - część 2">
+                        Raspberry Pi: moduły jądra - część 2
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2017-02-13T21:00:00+01:00"> pon 13 lutego 2017</time>
+    </span>
+
+
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="/tag/c.html">c</a>
+        /
+	<a href="/tag/raspberry-pi.html">raspberry pi</a>
+        /
+	<a href="/tag/kernel.html">kernel</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <p>W poprzedniej <a class="reference external" href="/posts/2017/02/07/rpi-lkm-part-1.html">częśc</a> pokazałem, jak zbudować i załadować do pamięci najprostszy moduł. Teraz postaram się opisać wybrane sposoby
+komunikacji pomiędzy użytkownikiem a modułami. Zacznę od pisania do logu oraz przekazywania do modułu parametrów z wiersza poleceń.</p>
+<div class="section" id="hello-world">
+<h2>Hello World</h2>
+<p>W sumie jet to program od którego należałoby zacząć - wypisanie przywitania, w naszym przypadku do logu:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;linux/init.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp"></span>
+
+<span class="n">MODULE_LICENSE</span><span class="p">(</span><span class="s">&quot;GPL&quot;</span><span class="p">);</span>
+<span class="n">MODULE_AUTHOR</span><span class="p">(</span><span class="s">&quot;Krzysiek Witkowicz&quot;</span><span class="p">);</span>
+<span class="n">MODULE_DESCRIPTION</span><span class="p">(</span><span class="s">&quot;Hello World from the linux kernel module&quot;</span><span class="p">);</span>
+<span class="n">MODULE_VERSION</span><span class="p">(</span><span class="s">&quot;1.0&quot;</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">hello_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+          <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;Hello World from the first Kernel Module!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+          <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="n">__exit</span> <span class="nf">hello_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+          <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;Goodbye from the Kernel Module!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">module_init</span><span class="p">(</span><span class="n">hello_init</span><span class="p">);</span>
+<span class="n">module_exit</span><span class="p">(</span><span class="n">hello_exit</span><span class="p">);</span>
+</pre></div>
+<p>Należy zwrócić uwagę na 2 rzeczy:</p>
+<ul class="simple">
+<li>Makra <code class="c"><span class="n">MODULE_</span><span class="o">*</span></code> zapewniają informacje dla modinfo</li>
+<li>Funkcja <code class="c"><span class="n">printk</span><span class="p">()</span></code> - jądro nie ma dostępu do bibliotek z przestrzeni użytkownika, tak więc nie możemy skorzystać z funkcji <code class="c"><span class="n">printf</span><span class="p">()</span></code>. Zamiast niej musimy użyć dedykowanej do pracy w przestrzeni jądra <code class="c"><span class="n">printk</span><span class="p">()</span></code>.</li>
+</ul>
+<p>Dopisujemy obiekt hello.o do Makefile, kompilujemy a następnie ładujemy i usuwamy nasz nowy moduł:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ sudo insmod hello.ko
+pi@raspberrypi:~ $ sudo rmmod hello.ko
+</pre></div>
+<p>Możemy teraz zajrzeć do logu /var/log/kern.log</p>
+<div class="highlight"><pre><span></span>Feb  <span class="m">7</span> <span class="m">19</span>:20:14 raspberrypi kernel: <span class="o">[</span> <span class="m">9649</span>.667909<span class="o">]</span> Hello World from the first Kernel Module!
+Feb  <span class="m">7</span> <span class="m">19</span>:20:22 raspberrypi kernel: <span class="o">[</span> <span class="m">9657</span>.602222<span class="o">]</span> Goodbye from the Kernel Module!
+</pre></div>
+</div>
+<div class="section" id="przekazywania-parametrow-do-modulu">
+<h2>Przekazywania parametrów do modułu</h2>
+<p>Jedną z metod komunikacji z modułem jądra jest przekazywanie parametrów podczas ładowania modułu. Pokazuje to poniższy
+przykład:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;linux/init.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;linux/moduleparam.h&gt;</span><span class="cp"></span>
+
+<span class="n">MODULE_LICENSE</span><span class="p">(</span><span class="s">&quot;GPL&quot;</span><span class="p">);</span>
+<span class="n">MODULE_AUTHOR</span><span class="p">(</span><span class="s">&quot;Krzysiek Witkowicz&quot;</span><span class="p">);</span>
+<span class="n">MODULE_DESCRIPTION</span><span class="p">(</span><span class="s">&quot;Passing command line arguments to LKM&quot;</span><span class="p">);</span>
+<span class="n">MODULE_VERSION</span><span class="p">(</span><span class="s">&quot;1.0&quot;</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;How are you?&quot;</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">integer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">short</span> <span class="kt">int</span> <span class="n">strange_short</span> <span class="o">=</span> <span class="mi">666</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">my_array</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">array_num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="n">module_param</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">charp</span><span class="p">,</span> <span class="mo">0000</span> <span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="s">&quot;My string&quot;</span><span class="p">);</span>
+<span class="n">module_param</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">S_IWUSR</span> <span class="o">|</span> <span class="n">S_IRGRP</span> <span class="o">|</span> <span class="n">S_IROTH</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span> <span class="s">&quot;My integer&quot;</span><span class="p">);</span>
+<span class="n">module_param_named</span><span class="p">(</span><span class="n">normal_short</span><span class="p">,</span> <span class="n">strange_short</span><span class="p">,</span> <span class="kt">short</span><span class="p">,</span> <span class="mo">0644</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">strange_short</span><span class="p">,</span> <span class="s">&quot;My named parameter&quot;</span><span class="p">);</span>
+<span class="n">module_param_array</span><span class="p">(</span><span class="n">my_array</span><span class="p">,</span> <span class="kt">long</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">array_num</span><span class="p">,</span> <span class="mo">0000</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">my_array</span><span class="p">,</span> <span class="s">&quot;My array of longs&quot;</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">cli_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+           <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;My parameters are: </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;string %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">string</span><span class="p">);</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;integer %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">integer</span><span class="p">);</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;short %hd</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">strange_short</span><span class="p">);</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;table got %d elements and contains:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">array_num</span><span class="p">);</span>
+           <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="k">sizeof</span> <span class="p">(</span><span class="n">my_array</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="p">(</span><span class="kt">long</span> <span class="kt">int</span><span class="p">));</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+           <span class="p">{</span>
+                   <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">element[%d] = %ld</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">my_array</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+
+           <span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="n">__exit</span> <span class="n">cli_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+           <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;Goodbye from the Kernel Module!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">module_init</span><span class="p">(</span><span class="n">cli_init</span><span class="p">);</span>
+<span class="n">module_exit</span><span class="p">(</span><span class="n">cli_exit</span><span class="p">);</span>
+</pre></div>
+<p>Zaczynamy od zdefiniowania zmiennych globalnych, których wartość potem będziemy mogli zmodyfikować przy zawołaniu <code class="bash">insmod</code>.
+Następnie, przy użyciu makra <code class="c"><span class="n">module_param</span></code> wskazujemy te zmienne jako argumenty wiersza poleceń. Ostatecznie, przy
+użyciu <code class="c"><span class="n">MODULE_PARM_DESC</span></code> dokumentujemy nasze parametry - dzięki temu ich opis będzie widoczny w <code class="bash">modinfo</code>.</p>
+<div class="section" id="module-param">
+<h3>module_param</h3>
+<p>Jak przed chwilą wspomniałem, makro <code class="c"><span class="n">module_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">perm</span><span class="p">)</span></code> służy do określenia parametrów modułu. Przyjmuje ono
+następujące parametry:</p>
+<ul class="simple">
+<li><strong>name</strong> - nazwa parametru: ta sama nazwa dotyczy zarówno zmiennej użytej w kodzie jak i nazwy jaką wskazuje użytkownik. Możliwe jest również użycie nazwanych parametrów przy pomocy makra <code class="c"><span class="n">module_param_named</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">perm</span><span class="p">)</span></code> - wartość <code class="c"><span class="n">name</span></code> jest wykorzystywana przez użytkownika, natomiast <code class="c"><span class="n">variable</span></code> odpowiada zmiennej w kodzie modułu.</li>
+<li><strong>type</strong> - typ użytego argumentu. Możliwe rodzaje to <code class="c"><span class="n">byte</span><span class="p">,</span> <span class="kt">short</span><span class="p">,</span> <span class="n">ushort</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="n">uint</span><span class="p">,</span> <span class="kt">long</span><span class="p">,</span> <span class="n">ulong</span><span class="p">,</span> <span class="n">charp</span><span class="p">,</span> <span class="kt">bool</span><span class="p">,</span> <span class="n">invbool</span></code>. Nazwy są samotłumaczące się, ciekawostką jest <code class="c"><span class="n">invbool</span></code> przechowujący wartość przeciwną do podanej przez użytkownika. <code class="c"><span class="n">byte</span></code> jest przechowywany w pojedynczym <code class="c"><span class="kt">char</span></code>, <code class="c"><span class="kt">bool</span></code> oraz <code class="c"><span class="n">invbool</span></code> w <code class="c"><span class="kt">int</span></code>. Pozostałe typy przechowywane są w odpowiadających im typach języka C.</li>
+<li><strong>perm</strong> - opis uprawnień dla odpowiadającego pliku w sysfs. Uprawnienia mogą być podane w dobrze znanym formacie ósemkowym np. 0664 (<code class="bash">-rw-rw-r--</code>) lub też przy pomocy flag bitowych np. <code class="c"><span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">S_IWUSR</span> <span class="o">|</span> <span class="n">S_IRGRP</span></code> co odpowiada uprawnieniom 0640. Podanie samego zera blokuje wpis w sysfs.</li>
+</ul>
+</div>
+<div class="section" id="module-param-array">
+<h3>module_param_array</h3>
+<p>Do modułu można również przekazać listę parametrów, która będzie przechowywana w zwykłej tablicy. Służy do tego
+makro <code class="c"><span class="n">module_param_array</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">nump</span><span class="p">,</span> <span class="n">perm</span><span class="p">)</span></code>. Parametry <code class="c"><span class="n">name</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">perm</span></code> są analogiczne do tych z <code class="c"><span class="n">module_param</span></code>.
+Nowością jest parametr <strong>nump</strong> - wskaźnik na zmienną typu integer w której jądro będzie przechowywać ilość przekazanych elementów listy.
+Należy pamiętać, by tablica wskazywana prze parametr <code class="c"><span class="n">name</span></code> była zaalokowana statycznie - rozmiar tablicy musi być znany na etapie
+kompilacji.</p>
+<p>Analogicznie do <code class="c"><span class="n">module_param</span></code> możliwe jest użycie parametrów nazwanych - służy do tego makro <code class="c"><span class="n">module_param_array_named</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">nump</span><span class="p">,</span> <span class="n">perm</span><span class="p">)</span></code>.</p>
+<p>A tak wygląda nasz moduł &quot;w akcji&quot;:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ sudo insmod cli_arguments.ko <span class="nv">normal_short</span><span class="o">=</span>-11 <span class="nv">integer</span><span class="o">=</span><span class="m">12345</span>
+pi@raspberrypi:~ $ tail -10 /var/log/kern.log
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872885<span class="o">]</span> My parameters are:
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872907<span class="o">]</span> string How are you?
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872915<span class="o">]</span> integer <span class="m">12345</span>
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872922<span class="o">]</span> short -11
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872929<span class="o">]</span> table got <span class="m">0</span> elements:
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872937<span class="o">]</span>      element<span class="o">[</span><span class="m">0</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872944<span class="o">]</span>      element<span class="o">[</span><span class="m">1</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872950<span class="o">]</span>      element<span class="o">[</span><span class="m">2</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872957<span class="o">]</span>      element<span class="o">[</span><span class="m">3</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:28:36 raspberrypi kernel: <span class="o">[</span> <span class="m">7597</span>.872964<span class="o">]</span>      element<span class="o">[</span><span class="m">4</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+pi@raspberrypi:~ $ sudo rmmod  cli_arguments.ko
+pi@raspberrypi:~ $ sudo insmod cli_arguments.ko <span class="nv">my_array</span><span class="o">=</span><span class="m">111</span>,54353,-33333 <span class="nv">string</span><span class="o">=</span><span class="s1">&#39;&quot;Linux kernel modules are easy.&quot;&#39;</span>
+pi@raspberrypi:~ $ tail -10 /var/log/kern.log
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387032<span class="o">]</span> My parameters are:
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387061<span class="o">]</span> string Linux kernel modules are easy.
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387073<span class="o">]</span> integer <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387083<span class="o">]</span> short <span class="m">666</span>
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387093<span class="o">]</span> table got <span class="m">3</span> elements:
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387104<span class="o">]</span>      element<span class="o">[</span><span class="m">0</span><span class="o">]</span> <span class="o">=</span> <span class="m">111</span>
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387115<span class="o">]</span>      element<span class="o">[</span><span class="m">1</span><span class="o">]</span> <span class="o">=</span> <span class="m">54353</span>
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387126<span class="o">]</span>      element<span class="o">[</span><span class="m">2</span><span class="o">]</span> <span class="o">=</span> -33333
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387136<span class="o">]</span>      element<span class="o">[</span><span class="m">3</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+Feb <span class="m">13</span> <span class="m">20</span>:40:49 raspberrypi kernel: <span class="o">[</span> <span class="m">8330</span>.387146<span class="o">]</span>      element<span class="o">[</span><span class="m">4</span><span class="o">]</span> <span class="o">=</span> <span class="m">0</span>
+</pre></div>
+<p>Należy zwrócić uwagę na sposób przekazywania napisu jako parametru. W przypadku takiego zawołania:
+<code class="bash">sudo insmod cli_arguments.ko <span class="nv">string</span><span class="o">=</span><span class="s2">&quot;Hi there!&quot;</span></code> pojedyncze cudzysłowy zostaną 'zjedzone' przez
+powłokę i insmod przekaże następujący argument <code class="bash"><span class="nv">string</span><span class="o">=</span>Hi there!</code>. Jądro potraktuje 'Hi' jako wartość parametru 'string',
+natomiast 'there!' zostanie uznane za kolejny (nierozpoznany) argument. Aby tego uniknąć wystarczy otoczyć podwójny
+cudzysłów pojedynczym: <code class="bash">sudo insmod cli_arguments.ko <span class="nv">string</span><span class="o">=</span><span class="s1">'&quot;Hi there&quot;'</span></code>.</p>
+<p>W następnej <a class="reference external" href="/posts/2017/03/14/rpi-lkm-part-3.html">cześci</a> pokażę prosty sposób na komunikację z modułem.</p>
+</div>
+</div>
+
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="http://github.com/kwitkowicz"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Recent Posts -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
+  <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
+    <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
+    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Recent Posts -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-1">
+      <a href="/tag/raspberry-pi.html">raspberry pi</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/c.html">c</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/kernel.html">kernel</a>
+    </li>
+    <li class="list-group-item tag-2">
+      <a href="/tag/linux.html">linux</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/python.html">python</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+
+<!-- Sidebar/Links -->
+<li class="list-group-item">
+  <h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Links</span></h4>
+  <ul class="list-group" id="links">
+    <li class="list-group-item">
+      <a href="http://getpelican.com/" target="_blank">Pelican</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://python.org/" target="_blank">Python.org</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://jinja.pocoo.org/" target="_blank">Jinja2</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Links -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
+    Content
+  licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish">Creative Commons Attribution-ShareAlike 4.0 International License</a>, except where indicated otherwise.
+</small></p>
+         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>

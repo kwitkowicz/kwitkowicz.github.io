@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="polish" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>lseek - Krzysiek Witkowicz</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="/posts/2017/08/20/lseek.html">
+
+        <meta name="author" content="Krzysiek Witkowicz" />
+        <meta name="keywords" content="c,linux,kernel" />
+        <meta name="description" content="Czy rozmiar wszystkich plików w systemie plików może być większy niż rozmiar fizycznie zapisanych na dysku danych? Okazuje się, że tak. A w jaki sposób uzyskać ten efekt, można przeczytać poniżej. W większości przypadków operacje we/wy na pliku wykonywane są liniowo. Niekiedy jednak potrzebujemy nieliniowego poruszania się po pliku …" />
+
+        <meta property="og:site_name" content="Krzysiek Witkowicz" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="lseek"/>
+        <meta property="og:url" content="/posts/2017/08/20/lseek.html"/>
+        <meta property="og:description" content="Czy rozmiar wszystkich plików w systemie plików może być większy niż rozmiar fizycznie zapisanych na dysku danych? Okazuje się, że tak. A w jaki sposób uzyskać ten efekt, można przeczytać poniżej. W większości przypadków operacje we/wy na pliku wykonywane są liniowo. Niekiedy jednak potrzebujemy nieliniowego poruszania się po pliku …"/>
+        <meta property="article:published_time" content="2017-08-20" />
+            <meta property="article:section" content="programowanie" />
+            <meta property="article:tag" content="c" />
+            <meta property="article:tag" content="linux" />
+            <meta property="article:tag" content="kernel" />
+            <meta property="article:author" content="Krzysiek Witkowicz" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz ATOM Feed"/>
+
+        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Krzysiek Witkowicz            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/category/programowanie.html">Programowanie</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/posts/2017/08/20/lseek.html"
+                       rel="bookmark"
+                       title="Permalink to lseek">
+                        lseek
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2017-08-20T21:00:00+02:00"> nie 20 sierpnia 2017</time>
+    </span>
+
+
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="/tag/c.html">c</a>
+        /
+	<a href="/tag/linux.html">linux</a>
+        /
+	<a href="/tag/kernel.html">kernel</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <p>Czy rozmiar wszystkich plików w systemie plików może być większy niż rozmiar fizycznie zapisanych na dysku danych? Okazuje się, że
+tak. A w jaki sposób uzyskać ten efekt, można przeczytać poniżej.</p>
+<p>W większości przypadków operacje we/wy na pliku wykonywane są liniowo. Niekiedy jednak potrzebujemy nieliniowego poruszania
+się po pliku - z pomocą przychodzi funkcja <code class="c"><span class="n">lseek</span><span class="p">()</span></code> umożliwiająca ustawienie się w pliku na dowolnej pozycji:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+
+<span class="kt">off_t</span> <span class="nf">lseek</span> <span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">off_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">int</span> <span class="n">origin</span><span class="p">);</span>
+</pre></div>
+<p>Nie robi ona nic innego poza zmianą pozycji w pliku; w przypadku sukcesu zwraca nowe położenie w pliku, w przypadku błędu
+zwraca -1 i ustawia <code class="c"><span class="n">errno</span></code>. Zachowanie funkcji jest zależne od wartości parametru <code class="c"><span class="n">origin</span></code></p>
+<ul class="simple">
+<li><strong>SEEK_CUR</strong> - nowa pozycja w pliku będzie sumą aktualnej pozycji oraz wartości parametru <code class="c"><span class="n">pos</span></code>. Parametr ten może przyjmować wartości zarówno dodatnie jak i ujemne, w przypadku zera pozycja nie zostanie zmieniona</li>
+<li><strong>SEEK_END</strong> - nowa pozycja w pliku będzie sumą długości pliku oraz wartości parametru <code class="c"><span class="n">pos</span></code>. Parametr ten możę przyjmować wartości zarówno dodatnie jak i ujemne, w przypadku zera pozycja zostanie ustawiona na końcu pliku.</li>
+<li><strong>SEEK_SET</strong> - nowa pozycja w pliku zostanie ustawiona na wartość parametru <code class="c"><span class="n">pos</span></code>. W przypadku zera pozycja będzie ustalona na początku pliku.</li>
+</ul>
+<p>Przykładowy program kolejno: ustawia się na żądaną pozycję w pliku, przesuwa pozycję na koniec, odczytuje pozycję w pliku,
+cofa się względem końca pliku i ustawia pozycję na początek pliku:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;errno.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+        <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+        <span class="kt">off_t</span> <span class="n">ret</span><span class="p">;</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">2</span> <span class="p">)</span> <span class="p">{</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Usage: test file_name&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;open&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="mi">10</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;lseek1&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">while</span><span class="p">((</span><span class="n">r</span><span class="o">=</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">putchar</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;lseek2&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_CUR</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span> <span class="p">(</span><span class="s">&quot;lseek3&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;pos: %ld</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">ret</span><span class="p">);</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="n">SEEK_CUR</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;lseek4&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">while</span><span class="p">((</span><span class="n">r</span><span class="o">=</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">putchar</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;lseek5&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">while</span><span class="p">((</span><span class="n">r</span><span class="o">=</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">putchar</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $
+pi@raspberrypi:~ $ gcc seek_test.c -o seek_test
+pi@raspberrypi:~ $ cat file
+1234567890abcdefghijklmnopqrst
+pi@raspberrypi:~ $ ./seek_test file
+abcdefghijklmnopqrst
+pos: <span class="m">31</span>
+rst
+1234567890abcdefghijklmnopqrst
+pi@raspberrypi:~ $
+</pre></div>
+<p>Jak widać, funkcję <code class="c"><span class="n">lseek</span><span class="p">()</span></code> najczęściej wykorzystuje się do przeszukiwania pliku od początku lub końca oraz do ustalania
+pozycji w pliku. Pojawia się natomiast pytanie, co stanie się, gdy przesuniemy wskaźnik poza koniec pliku?</p>
+<div class="highlight"><pre><span></span><span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+</pre></div>
+<p>Otóż samo przeszukiwanie pliku poza jego końcem (o 1024 bajtów za daleko w powyższym przykładzie) nic nie zmienia - po prostu
+próba odczytu z takiego miejsca zwróci <code class="c"><span class="n">EOF</span></code>. Ale, jeśli w tym miejscu spróbujemy coś zapisać, stworzony zostanie nowy, wypełniony zerami
+obszar danych pomiędzy poprzednią i nową długością pliku. To uzupełnienie zerami nazywane jest luką (<em>hole</em>) i nie zajmuje fizycznie
+miejsca na dysku. W związku z tym rozmiar plików w systemie plików może być większy niż rozmiar fizycznie zapisanych danych.
+Takie pliki z lukami nazywane są plikami rzadkimi (<em>sparse files</em>).</p>
+<p>Poniższy przykład pokazuje, jak przy użyciu <code class="c"><span class="n">lseek</span><span class="p">()</span></code> stworzyć plik rzadki:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;errno.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+        <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
+        <span class="kt">off_t</span> <span class="n">ret</span><span class="p">;</span>
+
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sparse.tmp&quot;</span><span class="p">,</span> <span class="n">O_RDWR</span> <span class="o">|</span> <span class="n">O_CREAT</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;open&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;lseek&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">){</span>
+                <span class="n">perror</span><span class="p">(</span><span class="s">&quot;write&quot;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<div class="highlight"><pre><span></span>pi@raspberrypi: $ gcc sparse_test.c -o sparse_test
+pi@raspberrypi: $ ./sparse_test
+pi@raspberrypi: $ ls -l sparse.tmp
+-rwxr-xr-x <span class="m">1</span> pi pi <span class="m">1025</span> lip  <span class="m">5</span> <span class="m">22</span>:18 sparse.tmp
+pi@raspberrypi: $ du sparse.tmp
+<span class="m">4</span>       sparse.tmp
+pi@raspberrypi: $
+</pre></div>
+<p>Jak widać <code class="bash">du</code> jest 'odporne' na dziury w plikach i, w odróżnieniu od <code class="bash">ls</code> pokazuje fizyczny
+rozmiar pliku.</p>
+<p>Oczywiście nie każdy system umożliwia stworzenie plików rzadkich. Aby to sprawdzić, możemy wykonać następujący test:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi: $ dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>/tmp/sparse.txt <span class="nv">bs</span><span class="o">=</span>1k <span class="nv">seek</span><span class="o">=</span><span class="m">1024</span> <span class="nv">count</span><span class="o">=</span><span class="m">1</span>
+<span class="m">1</span>+0 przeczytanych recordów
+<span class="m">1</span>+0 zapisanych recordów
+skopiowane <span class="m">1024</span> bajty <span class="o">(</span><span class="m">1</span>,0 kB<span class="o">)</span>, <span class="m">0</span>,00162051 s, <span class="m">632</span> kB/s
+pi@raspberrypi: $ ls -l /tmp/sparse.txt
+-rw-r--r-- <span class="m">1</span> pi pi <span class="m">1049600</span> lip  <span class="m">5</span> <span class="m">22</span>:26 /tmp/sparse.txt
+pi@raspberrypi: $ du -lh /tmp/sparse.txt
+<span class="m">4</span>,0K      /tmp/sparse.txt
+pi@raspberrypi: $
+</pre></div>
+<p>Pomijamy 1024 bloki po 1k a następnie zapisujemy 1024 bajty. W przypadku pliku rzadkiego <code class="bash">du</code> pokaże kilka kB, w przeciwnym
+razie ponad MB.</p>
+<p>To, czy plik jest rzadki, możemy też zbadać programowo, wykorzystując funkcję <code class="c"><span class="n">stat</span><span class="p">()</span></code> - wystarczy sprawdzić, czy wielkość
+pliku (<code class="c"><span class="n">st_size</span></code>) jest większa od iloczynu liczby bloków (<code class="c"><span class="n">st_blocks</span></code>) i rozmiaru pojedynczego bloku (<code class="c"><span class="n">st_blksize</span></code>):</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;errno.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+       <span class="k">struct</span> <span class="n">stat</span> <span class="n">st</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+
+       <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">stat</span><span class="p">(</span><span class="s">&quot;/tmp/sparse.txt&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">st</span><span class="p">);</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;stat()&quot;</span><span class="p">);</span>
+               <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+       <span class="p">}</span>
+       <span class="k">else</span>
+       <span class="p">{</span>
+               <span class="n">printf</span><span class="p">(</span><span class="s">&quot;file size in bytes: %ld </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">st</span><span class="p">.</span><span class="n">st_size</span><span class="p">);</span>
+               <span class="n">printf</span><span class="p">(</span><span class="s">&quot;number of blocks: %ld </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">st</span><span class="p">.</span><span class="n">st_blocks</span><span class="p">);</span>
+               <span class="n">printf</span><span class="p">(</span><span class="s">&quot;block size: %ld </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">st</span><span class="p">.</span><span class="n">st_blksize</span><span class="p">);</span>
+
+               <span class="k">if</span> <span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">st_blksize</span> <span class="o">*</span> <span class="n">st</span><span class="p">.</span><span class="n">st_blocks</span><span class="p">))</span>
+                       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;file is a sparse file</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="p">}</span>
+       <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<div class="highlight"><pre><span></span>pi@raspberrypi: $ gcc sparse_check.c -o sparse_check
+pi@raspberrypi: $ ./sparse_check
+file size in bytes: <span class="m">1049600</span>
+number of blocks: <span class="m">8</span>
+block size: <span class="m">4096</span>
+file is a sparse file
+pi@raspberrypi: $
+</pre></div>
+<p>Dużą zaletą plików rzadkich jest to, iż oszczędzają one miejsce na dysku. Powierzchnia dyskowa jest alokowana tylko wtedy,
+gdy jest potrzebna. Pozwalają one również skrócić czas potrzebny na założenie pliku - system nie musi alokować 'miejsca na zera'.
+Stąd pliki te są używane np. przy tworzeniu migawek baz danych, plików z logami, czy też obrazów dysków. Spotkać się można
+z nimi choćby korzystając z maszyny wirtualnej: w poniższym przypadku obraz systemu liczy 100GB, ale sam plik zajmuje fizycznie kilka gigabajtów</p>
+<img alt="" src="/images/virtual_box.jpg" />
+<img alt="" src="/images/fs.jpg" />
+<p>Sparse files nie są jedynie domeną systemów UN*X. W systemie NTFS pliki tego typu możemy utworzyć komendą <code class="bash">fsutil</code>:</p>
+<div class="highlight"><pre><span></span>c:<span class="se">\d</span>ev&gt;fsutil File CreateNew temp 0x100000
+File c:<span class="se">\d</span>ev<span class="se">\t</span>emp is created
+
+c:<span class="se">\d</span>ev&gt;fsutil Sparse SetFlag temp
+
+c:<span class="se">\d</span>ev&gt;fsutil Sparse SetRange temp <span class="m">0</span> 0x100000
+</pre></div>
+<img alt="" src="/images/win_sparse.jpg" />
+<p>Oczywiście WinApi również udostępnia odpowiednie metody (kod <code class="c"><span class="n">FSCTL_SET_SPARSE</span></code> dla funkcji <code class="c"><span class="n">DeviceIoControl</span><span class="p">()</span></code>),
+ale to już temat na oddzielną notkę.</p>
+
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="http://github.com/kwitkowicz"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Recent Posts -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
+  <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
+    <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
+    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Recent Posts -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-1">
+      <a href="/tag/raspberry-pi.html">raspberry pi</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/c.html">c</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/kernel.html">kernel</a>
+    </li>
+    <li class="list-group-item tag-2">
+      <a href="/tag/linux.html">linux</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/python.html">python</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+
+<!-- Sidebar/Links -->
+<li class="list-group-item">
+  <h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Links</span></h4>
+  <ul class="list-group" id="links">
+    <li class="list-group-item">
+      <a href="http://getpelican.com/" target="_blank">Pelican</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://python.org/" target="_blank">Python.org</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://jinja.pocoo.org/" target="_blank">Jinja2</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Links -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
+    Content
+  licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish">Creative Commons Attribution-ShareAlike 4.0 International License</a>, except where indicated otherwise.
+</small></p>
+         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>

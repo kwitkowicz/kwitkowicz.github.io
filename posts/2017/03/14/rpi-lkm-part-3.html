@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="polish" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Raspberry Pi: moduły jądra - część 3 - Krzysiek Witkowicz</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="/posts/2017/03/14/rpi-lkm-part-3.html">
+
+        <meta name="author" content="Krzysiek Witkowicz" />
+        <meta name="keywords" content="c,raspberry pi,kernel" />
+        <meta name="description" content="Sterowniki do urządzeń znakowych są bardzo popularnym rodzajem modułów. Swoją karierę zawdzięczają zarówno prostej do zrozumienia i zaimplementowania zasadzie działania jak i dużej uniwersalności. Umożliwiając bezpośredni transfer danych z oraz do przestrzeni użytkownika zachowują się analogicznie do zwykłych plików, zapewniając zapis, odczyt oraz przeszukiwanie. Spróbujmy więc przygotować sterownik urządzenia \d …" />
+
+        <meta property="og:site_name" content="Krzysiek Witkowicz" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Raspberry Pi: moduły jądra - część 3"/>
+        <meta property="og:url" content="/posts/2017/03/14/rpi-lkm-part-3.html"/>
+        <meta property="og:description" content="Sterowniki do urządzeń znakowych są bardzo popularnym rodzajem modułów. Swoją karierę zawdzięczają zarówno prostej do zrozumienia i zaimplementowania zasadzie działania jak i dużej uniwersalności. Umożliwiając bezpośredni transfer danych z oraz do przestrzeni użytkownika zachowują się analogicznie do zwykłych plików, zapewniając zapis, odczyt oraz przeszukiwanie. Spróbujmy więc przygotować sterownik urządzenia \d …"/>
+        <meta property="article:published_time" content="2017-03-14" />
+            <meta property="article:section" content="programowanie" />
+            <meta property="article:tag" content="c" />
+            <meta property="article:tag" content="raspberry pi" />
+            <meta property="article:tag" content="kernel" />
+            <meta property="article:author" content="Krzysiek Witkowicz" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz ATOM Feed"/>
+
+        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Krzysiek Witkowicz            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/category/programowanie.html">Programowanie</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/posts/2017/03/14/rpi-lkm-part-3.html"
+                       rel="bookmark"
+                       title="Permalink to Raspberry Pi: moduły jądra - część 3">
+                        Raspberry Pi: moduły jądra - część 3
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2017-03-14T22:00:00+01:00"> wto 14 marca 2017</time>
+    </span>
+
+
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="/tag/c.html">c</a>
+        /
+	<a href="/tag/raspberry-pi.html">raspberry pi</a>
+        /
+	<a href="/tag/kernel.html">kernel</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <p>Sterowniki do urządzeń znakowych są bardzo popularnym rodzajem modułów. Swoją karierę zawdzięczają zarówno
+prostej do zrozumienia i zaimplementowania zasadzie działania jak i dużej uniwersalności. Umożliwiając bezpośredni
+transfer danych z oraz do przestrzeni użytkownika zachowują się analogicznie do zwykłych plików, zapewniając zapis,
+odczyt oraz przeszukiwanie. Spróbujmy więc przygotować sterownik urządzenia <code class="bash"><span class="se">\d</span>ev<span class="se">\m</span>ychar</code>, który posłuży nam do
+komunikacji pomiędzy modułem jądra a programem z przestrzeni użytkownika.</p>
+<div class="section" id="dostep-do-urzadzen-znakowych">
+<h2>Dostęp do urządzeń znakowych</h2>
+<p>Jak przed chwilą wspomniałem, dostęp do urządzeń znakowych odbywa się poprzez specjalne pliki, zazwyczaj zlokalizowane
+w katalogu <code class="bash">/dev</code>:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ ls -l /dev
+<span class="o">(</span>...<span class="o">)</span>
+crw-rw-rw- <span class="m">1</span> root tty     <span class="m">5</span>,   <span class="m">0</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,   <span class="m">0</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty0
+crw------- <span class="m">1</span> pi   tty     <span class="m">4</span>,   <span class="m">1</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty1
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">10</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty10
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">11</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty11
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">12</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty12
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">13</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty13
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">14</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty14
+crw--w---- <span class="m">1</span> root tty     <span class="m">4</span>,  <span class="m">15</span> lut <span class="m">28</span> <span class="m">22</span>:02 tty15
+</pre></div>
+<p>Rzucają się w oczy 2 różnice pomiędzy 'standardowym' widokiem z ls (np. z katalogu domowego) a obecnym:</p>
+<ul class="simple">
+<li>nie spotykany gdzie indziej znak <strong>c</strong> w pierwszej kolumnie oznaczający <em>character device</em> (jest jeszcze <strong>b</strong> dla <em>block device</em>)</li>
+<li>dwie oddzielone przecinkiem liczby całkowite</li>
+</ul>
+<p>Liczby te to powiązane z plikiem specjalnym dwie wartości: <em>major number</em> (numer główny urządzenia)
+oraz <em>minor number</em> (numer podrzędny urządzenia). Pierwsza wartość identyfikuje sterownik powiązany z urządzeniem, druga
+jest zależna od danego urządzenia i może np. służyć do identyfikacji konkretnego urządzenia fizycznego w sytuacji, gdy
+sterownik obsługuje ich kilka.</p>
+<p>Jedną z pierwszych rzeczy, jakie musimy zrobić chcąc skorzystać z naszego sterownika, jest zarejestrowanie go w jądrze.
+Sprowadza się to do przypisania modułowi <em>major number</em> podczas jego inicjalizacji. Do zarejestrowania oraz wyrejestrowania
+sterownika służą zadeklarowane w <code class="c"><span class="n">linux</span><span class="o">/</span><span class="n">fs</span><span class="p">.</span><span class="n">h</span></code> funkcje:</p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">register_chrdev</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">major</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file_operations</span> <span class="o">*</span><span class="n">fops</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">unregister_chrdev</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">major</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+<p>gdzie:</p>
+<ul class="simple">
+<li><strong>major</strong> to wskazany przez nas numer główny. Oczywiście pojawia się pytanie, jak uniknąć konfliktu z istniejącym już być może numerem. Można oczywiście zajrzeć do dokumentacji, ale o wiele lepiej jest skorzystać z dynamicznego przydzielana numeru. Otóż po przekazaniu do funkcji parametru <code class="c"><span class="n">major</span></code> równego 0, jądro <em>major number</em> zaalokkuje dynamicznie, co w naszym sterowniku jest rozwiązaniem wystarczającym.</li>
+<li><strong>name</strong> to nazwa urządzenia. Zarówno nazwę jak i numer główny dla zerejestrowanych modułów można zobaczyć w pliku <code class="bash">/proc/devices</code>:</li>
+</ul>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ head /proc/devices
+Character devices:
+  <span class="m">1</span> mem
+  <span class="m">4</span> /dev/vc/0
+  <span class="m">4</span> tty
+  <span class="m">5</span> /dev/tty
+  <span class="m">5</span> /dev/console
+  <span class="m">5</span> /dev/ptmx
+  <span class="m">5</span> ttyprintk
+  <span class="m">7</span> vcs
+ <span class="m">10</span> misc
+</pre></div>
+<ul class="simple">
+<li><strong>fops</strong> to wskaźnik na strukturę <code class="c"><span class="n">file_operations</span></code> zawierającą wskaźniki na funkcje mogące wykonywać operacje na naszym urządzeniu.</li>
+</ul>
+<p>Wskaźniki zawarte w <code class="c"><span class="n">file_operations</span></code> wskazują na funkcje, którymi definiujemy poszczególne operacje na plikach, jakie
+będzie wykonywał nasz sterownik. Na nasze potrzeby zaimplementujemy <code class="c"><span class="n">read</span></code>, <code class="c"><span class="n">write</span></code>, <code class="c"><span class="n">open</span></code>, <code class="c"><span class="n">release</span></code>, natomiast
+możliwości jest dużo więcej, drobny fragment struktury może wyglądać tak</p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">flush</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="n">fl_owner_t</span> <span class="n">id</span><span class="p">);</span>             <span class="c1">// called when a process closes its copy of the descriptor</span>
+<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">release</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">);</span>          <span class="c1">// called when a file structure is being released</span>
+<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">fsync</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="n">loff_t</span><span class="p">,</span> <span class="n">loff_t</span><span class="p">,</span> <span class="kt">int</span> <span class="n">datasync</span><span class="p">);</span>  <span class="c1">// notify device of change in its FASYNC flag</span>
+<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">aio_fsync</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">kiocb</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span> <span class="n">datasync</span><span class="p">);</span>         <span class="c1">// synchronous notify device of change in its FASYNC flag</span>
+<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">fasync</span><span class="p">)</span> <span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>                 <span class="c1">// asynchronous notify device of change in its FASYNC flag</span>
+<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">lock</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file_lock</span> <span class="o">*</span><span class="p">);</span>    <span class="c1">// used to implement file locking</span>
+</pre></div>
+<p>Oczywiście nie ma potrzeby implementować wszystkich tych funkcji. Brak implementacji sprawi, że wskaźniki będą zwyczajnie
+wskazywać na <code class="c"><span class="nb">NULL</span></code>, a dane operacje nie będą dostępne:</p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">struct</span> <span class="n">file_operations</span> <span class="n">fo</span> <span class="o">=</span> <span class="p">{</span>
+       <span class="p">.</span><span class="n">open</span> <span class="o">=</span> <span class="n">mychar_dev_open</span><span class="p">,</span>
+       <span class="p">.</span><span class="n">read</span> <span class="o">=</span> <span class="n">mychar_dev_read</span><span class="p">,</span>
+       <span class="p">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">mychar_dev_write</span><span class="p">,</span>
+       <span class="p">.</span><span class="n">release</span> <span class="o">=</span> <span class="n">mychar_dev_release</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+<p>Aby móc skorzystać z naszego urządzenia, musimy utworzyć plik specjalny <code class="bash"><span class="se">\d</span>ev<span class="se">\m</span>ychar</code>. Można wykorzystać do tego celu
+polecenie <code class="bash">mknod</code>:</p>
+<div class="highlight"><pre><span></span><span class="c1">#mknod /dev/&lt;driver_interface_name&gt; c &lt;major number&gt; &lt;minor number&gt;</span>
+</pre></div>
+<p>dużo wygodniej jednak będzie skorzystać z funkcji udostępnionych przez jądro.</p>
+<p>Zaczynamy od stworzenia struktury <code class="c"><span class="n">class</span></code>, będącej pewnego rodzaju abstrakcją nad implementacją sterownika. Można powiedzieć,
+że klasy grupują urządzenia pod kątem tego, do czego służą a nie pod kątem ich fizycznego sposobu działania czy budowy</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">class</span> <span class="o">*</span> <span class="n">class_create</span><span class="p">(</span><span class="k">struct</span> <span class="n">module</span> <span class="o">*</span><span class="n">owner</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span>
+</pre></div>
+<ul class="simple">
+<li><strong>owner</strong> - wskaźnik na moduł do którego należy dana klasa</li>
+<li><strong>name</strong> - wkaźnik na łańcuch znaków z nazwą klasy</li>
+</ul>
+<p>W naszym przypadku będzie to klasa <code class="c"><span class="n">mychar_class</span></code>:</p>
+<div class="highlight"><pre><span></span><span class="n">mychar_dev_class</span> <span class="o">=</span> <span class="n">class_create</span><span class="p">(</span><span class="n">THIS_MODULE</span><span class="p">,</span> <span class="s">&quot;mychar_class&quot;</span><span class="p">);</span>
+         <span class="k">if</span><span class="p">(</span><span class="n">IS_ERR</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">)){</span>
+                 <span class="n">unregister_chrdev</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="n">MY_DEVICE_NAME</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span><span class="p">,</span> <span class="s">&quot;mychar_dev: fail while register device class&quot;</span><span class="p">);</span>
+                 <span class="k">return</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">);</span>
+         <span class="p">}</span>
+</pre></div>
+<p>Po załadowaniu modułu, w katalaogu <code class="bash">/sys/class</code> można sprawdzić, że klasa rzeczywiście została utworzona:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ sudo ls -l /sys/class/mychar_class
+razem <span class="m">0</span>
+lrwxrwxrwx <span class="m">1</span> root root <span class="m">0</span> mar  <span class="m">8</span> <span class="m">20</span>:43 mychar -&gt; ../../devices/virtual/mychar_class/mychar
+pi@raspberrypi:~ $ sudo ls -l /sys/devices/virtual/mychar_class/mychar/
+razem <span class="m">0</span>
+-r--r--r-- <span class="m">1</span> root root <span class="m">4096</span> mar  <span class="m">8</span> <span class="m">20</span>:44 dev
+drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> mar  <span class="m">8</span> <span class="m">20</span>:44 power
+lrwxrwxrwx <span class="m">1</span> root root    <span class="m">0</span> mar  <span class="m">8</span> <span class="m">20</span>:44 subsystem -&gt; ../../../../class/mychar_class
+-rw-r--r-- <span class="m">1</span> root root <span class="m">4096</span> mar  <span class="m">8</span> <span class="m">20</span>:41 uevent
+</pre></div>
+<p>Do usunięcia natomiast wcześniej stworzonej klasy służy funkcja:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">class_destroy</span> <span class="p">(</span><span class="k">struct</span> <span class="n">class</span> <span class="o">*</span><span class="n">class</span><span class="p">);</span>
+</pre></div>
+<p>Teraz możemy powołać do życia urządzenie i zarejestrować je w SysFS:</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">device</span> <span class="o">*</span><span class="nf">device_create</span><span class="p">(</span><span class="k">struct</span> <span class="n">class</span> <span class="o">*</span><span class="n">cls</span><span class="p">,</span> <span class="k">struct</span> <span class="n">device</span> <span class="o">*</span><span class="n">parent</span><span class="p">,</span> <span class="kt">dev_t</span> <span class="n">devt</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">drvdata</span><span class="p">,</span>
+                            <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">fmt</span><span class="p">,</span> <span class="p">...);</span>
+</pre></div>
+<ul class="simple">
+<li><strong>cls</strong> - wskaźnik na klasę, z którą będzie skojarzone urządzenie</li>
+<li><strong>parent</strong> - wskaźnik na urządzenie nadrzędne (o ile istnieje)</li>
+<li><strong>devt</strong> - reprezentacja głównego oraz podrzędnego numeru urządzenia</li>
+<li><strong>drvdata</strong> - dane na potrzeby wywołań zwrotnych, np. używanych przez jądro podczas komunikacji z udziałem SysFS</li>
+<li><strong>fmt</strong> - nazwa urządzenia</li>
+</ul>
+<p>Poniższy fragment kodu tworzy plik urządzenia <code class="bash">/dev/mychar</code>. Nie trzeba wołać z przestrzeni użytkownika polecenia
+<code class="bash">mknod</code> - wszystko dzieje się w przestrzeni jądra.</p>
+<div class="highlight"><pre><span></span><span class="n">mychar_dev</span> <span class="o">=</span> <span class="n">device_create</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">MKDEV</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;mychar&quot;</span><span class="p">);</span>
+         <span class="k">if</span> <span class="p">(</span><span class="n">IS_ERR</span><span class="p">(</span><span class="n">mychar_dev</span><span class="p">)){</span>
+                 <span class="n">class_destroy</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">);</span>
+                 <span class="n">unregister_chrdev</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="s">&quot;mychar&quot;</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">&quot;Failed to create the device</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="k">return</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">mychar_dev</span><span class="p">);</span>
+         <span class="p">}</span>
+</pre></div>
+<p>Makro <code class="c"><span class="n">MKDEV</span><span class="p">(</span><span class="kt">int</span> <span class="n">major</span><span class="p">,</span> <span class="kt">int</span> <span class="n">minor</span><span class="p">)</span></code> zamienia numery główny i podrzędny na typ <code class="c"><span class="kt">dev_t</span></code> - 32 bity bez znaku. W drugą stronę
+natomiast można skorzystać z makr:</p>
+<div class="highlight"><pre><span></span><span class="n">MAJOR</span><span class="p">(</span><span class="kt">dev_t</span> <span class="n">dev</span><span class="p">);</span>
+<span class="n">MINOR</span><span class="p">(</span><span class="kt">dev_t</span> <span class="n">dev</span><span class="p">);</span>
+</pre></div>
+<p>Po załadowaniu sterownika można sprawdzić, że nowe urządzenie rzeczywiście zostało wykreowane:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ sudo grep mychar /proc/devices
+<span class="m">243</span> mychar
+</pre></div>
+<p>Do usunięcia urządzenia służy funkcja:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">device_destroy</span> <span class="p">(</span><span class="k">struct</span> <span class="n">class</span> <span class="o">*</span> <span class="n">class</span><span class="p">,</span> <span class="kt">dev_t</span> <span class="n">devt</span><span class="p">);</span>
+</pre></div>
+<p>Następnie zaimplementujemy funkcje wskazywane przez <code class="c"><span class="n">file_operations</span></code>. Na początek funkcja wykonywana za każdym razem,
+gdy urządzenie jest otwierane przez program z przestrzeni użytkownika:</p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">mychar_dev_open</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">){</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: device opened</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<ul class="simple">
+<li><strong>inode</strong> - wskaźnik na i-węzeł</li>
+<li><strong>file</strong> - wskaźnik na plik</li>
+</ul>
+<p>Jak widać funkcja nie implementuje większej logiki, zrzuca jedynie do logu informację o otworzeniu pliku. W analogiczny
+sposób napiszemy funkcję wykonywaną przy zamknięciu/zwolnieniu urządzenia:</p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">mychar_dev_release</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">){</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: device closed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Następnie zaimplementujemy funkcję wykonywaną podczas odczytu danych z urządzenia, np. gdy dane są wysyłane do przestrzeni użytkownika:</p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">mychar_dev_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span> <span class="n">filep</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buff</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">buff_len</span><span class="p">,</span> <span class="n">loff_t</span> <span class="o">*</span> <span class="n">offset</span><span class="p">){</span>
+         <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy_to_user</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">msg_length</span><span class="p">);</span>
+         <span class="k">if</span><span class="p">(</span><span class="n">ret</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: %d bytes send to client</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="k">return</span><span class="p">(</span><span class="n">msg_length</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
+         <span class="p">}</span>
+         <span class="k">else</span><span class="p">{</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">&quot;mychar_dev: failed while send data</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="k">return</span> <span class="o">-</span><span class="n">EFAULT</span><span class="p">;</span>
+         <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<ul class="simple">
+<li><strong>filep</strong> - wskaźnik na plik</li>
+<li><strong>buff</strong> - wskaźnik na bufor do którego funkcja zapisze dane</li>
+<li><strong>buff_len</strong> - długość bufora</li>
+<li><strong>offset</strong> - offset (o ile jest wymagany)</li>
+</ul>
+<p>Sercem powyższego fragmentu kodujest wywołanie funkcji kopiującej dane z przestrzeni jądra do przestrzeni użytkownika:</p>
+<div class="highlight"><pre><span></span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">copy_to_user</span> <span class="p">(</span><span class="kt">void</span> <span class="n">__user</span> <span class="o">*</span> <span class="n">to</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span> <span class="n">from</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+<ul class="simple">
+<li><strong>to</strong> - wskaźnik na adres docelowy, w przestrzeni użytkownika</li>
+<li><strong>from</strong> - wskaźnik na adres źródłowy, w przestrzeni jądra</li>
+<li><strong>n</strong> - ilość bajtów do skopiowania</li>
+</ul>
+<p>Funkcja <code class="c"><span class="n">copy_to_user</span><span class="p">()</span></code> zwraca ilość nieskopiowanych bajtów lub, w razie powodzenia, zero. Jej wywołanie jest niezbędne,
+bezpośrednia próba skopiowania danych z przestrzeni jądra do przestrzeni użytkownika zakończyłaby się błędem naruszenia
+ochrony pamięci.</p>
+<p>Na koniec zaimplementujemy funkcję wykonywaną podczas zapisu do urządzenia z przestrzeni użytkownika.</p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">mychar_dev_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span> <span class="n">filep</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buff</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">buff_len</span><span class="p">,</span> <span class="n">loff_t</span> <span class="o">*</span> <span class="n">offset</span><span class="p">){</span>
+         <span class="n">sprintf</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s">&quot;%s&quot;</span><span class="p">,</span><span class="n">buff</span><span class="p">);</span>
+         <span class="n">msg_length</span> <span class="o">=</span> <span class="n">strlen</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: Received %Iu characters from client</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">msg_length</span><span class="p">);</span>
+         <span class="k">return</span> <span class="n">buff_len</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>W kontekście wcześniejszych opisów jest raczej samowyjaśniająca się. Dobrze znaną funkcją <code class="c"><span class="n">sprintf</span></code> kopiujemy dane
+z przestrzeni użytkownika do zmiennej <code class="c"><span class="n">msg</span></code> zadeklarowanej w przestrzeni jądra i zrzucamy je do logu.</p>
+</div>
+<div class="section" id="klient">
+<h2>Klient</h2>
+<p>Moduł jest zbudowany i załadowany do pamięci, natomiast nie mamy jeszcze możliwości komunikacji z nim.
+Przygotujmy więc program, który pobierze od użytkownika ciąg znaków, zapisze do naszego urządzenia <code class="bash">/dev/mychar</code> i po
+kilku sekundach odczyta i wypisze odpowiedź:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="cpf">&lt;errno.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="cpf">&lt;fcntl.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#define MAX_BUFFER_LEN 255</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">receive</span><span class="p">[</span><span class="n">MAX_BUFFER_LEN</span><span class="p">];</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+       <span class="kt">int</span> <span class="n">ret</span><span class="p">,</span> <span class="n">fd</span><span class="p">;</span>
+       <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="n">MAX_BUFFER_LEN</span><span class="p">];</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Opening character device</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/mychar&quot;</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to open the device.&quot;</span><span class="p">);</span>
+               <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
+       <span class="p">}</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Type text to send to kernel:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%[^</span><span class="se">\n</span><span class="s">]%*c&quot;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Writing message to the device [%s].</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+       <span class="n">ret</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to write the message to the device.&quot;</span><span class="p">);</span>
+               <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
+       <span class="p">}</span>
+       <span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Wait 5 seconds for reading back from the device.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Reading from the device...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">MAX_BUFFER_LEN</span><span class="p">);</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to read the message from the device.&quot;</span><span class="p">);</span>
+               <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
+       <span class="p">}</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;The read message is: [%s]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">receive</span><span class="p">);</span>
+       <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Powyższe rozwiązanie działa:</p>
+<div class="highlight"><pre><span></span>pi@raspberrypi:~ $ sudo ./char_device_client
+Opening character device
+Type text to send to kernel:
+Some important data
+Writing message to the device <span class="o">[</span>Some important data<span class="o">]</span>.
+Wait <span class="m">5</span> seconds <span class="k">for</span> reading back from the device.
+Reading from the device...
+The <span class="nb">read</span> message is: <span class="o">[</span>My message is:<span class="o">[</span>Some important data<span class="o">]]</span>
+pi@raspberrypi:~ $ tail -4 /var/log/kern.log
+Mar <span class="m">14</span> <span class="m">21</span>:23:50 raspberrypi kernel: <span class="o">[</span> <span class="m">4901</span>.801790<span class="o">]</span> mychar_dev: device opened
+Mar <span class="m">14</span> <span class="m">21</span>:23:58 raspberrypi kernel: <span class="o">[</span> <span class="m">4909</span>.836530<span class="o">]</span> mychar_dev: Received <span class="m">19</span> characters from client
+Mar <span class="m">14</span> <span class="m">21</span>:24:03 raspberrypi kernel: <span class="o">[</span> <span class="m">4914</span>.836803<span class="o">]</span> mychar_dev: <span class="m">35</span> bytes send to client
+Mar <span class="m">14</span> <span class="m">21</span>:24:03 raspberrypi kernel: <span class="o">[</span> <span class="m">4914</span>.837362<span class="o">]</span> mychar_dev: device closed
+pi@raspberrypi:~ $
+</pre></div>
+<p>aczkolwiek z pewnymi zastrzeżeniami: wymaga uprawnień roota oraz nie jest odporne na problemy związane ze współbieżnością.
+Ale o tym w następnym <a class="reference external" href="/posts/2017/08/20/lseek.html">odcinku</a>.</p>
+</div>
+
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="http://github.com/kwitkowicz"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Recent Posts -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
+  <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
+    <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
+    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Recent Posts -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-1">
+      <a href="/tag/raspberry-pi.html">raspberry pi</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/c.html">c</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/kernel.html">kernel</a>
+    </li>
+    <li class="list-group-item tag-2">
+      <a href="/tag/linux.html">linux</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/python.html">python</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+
+<!-- Sidebar/Links -->
+<li class="list-group-item">
+  <h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Links</span></h4>
+  <ul class="list-group" id="links">
+    <li class="list-group-item">
+      <a href="http://getpelican.com/" target="_blank">Pelican</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://python.org/" target="_blank">Python.org</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://jinja.pocoo.org/" target="_blank">Jinja2</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Links -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
+    Content
+  licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish">Creative Commons Attribution-ShareAlike 4.0 International License</a>, except where indicated otherwise.
+</small></p>
+         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>
