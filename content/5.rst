@@ -1,3 +1,6 @@
+O problemach z errno słów kilka
+################################
+
 :title: O problemach z errno słów kilka
 :date: 2017-06-07 21:00
 :slug: errno

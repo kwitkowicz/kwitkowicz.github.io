@@ -1,4 +1,7 @@
-﻿:title: Raspberry Pi: moduły jądra - część 2
+﻿Raspberry Pi: moduły jądra - część 2
+#####################################
+
+:title: Raspberry Pi: moduły jądra - część 2
 :date: 2017-02-13 21:00
 :slug: rpi-lkm-part-2
 :category: programowanie

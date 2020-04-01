@@ -1,4 +1,8 @@
-﻿:title: Email w pythonie
+﻿Email w pythonie
+#################
+
+
+:title: Email w pythonie
 :date: 2017-03-01 22:00
 :slug: email-python
 :category: programowanie
