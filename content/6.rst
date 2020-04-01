@@ -238,8 +238,7 @@ pliku (:c:`st_size`) jest większa od iloczynu liczby bloków (:c:`st_blocks`) i
  file is a sparse file
  pi@raspberrypi: $
 
-|
-|Dużą zaletą plików rzadkich jest to, iż oszczędzają one miejsce na dysku. Powierzchnia dyskowa jest alokowana tylko wtedy,
+Dużą zaletą plików rzadkich jest to, iż oszczędzają one miejsce na dysku. Powierzchnia dyskowa jest alokowana tylko wtedy,
 gdy jest potrzebna. Pozwalają one również skrócić czas potrzebny na założenie pliku - system nie musi alokować 'miejsca na zera'.
 Stąd pliki te są używane np. przy tworzeniu migawek baz danych, plików z logami, czy też obrazów dysków. Spotkać się można
 z nimi choćby korzystając z maszyny wirtualnej: w poniższym przypadku obraz systemu liczy 100GB, ale sam plik zajmuje fizycznie kilka gigabajtów
@@ -248,9 +247,7 @@ z nimi choćby korzystając z maszyny wirtualnej: w poniższym przypadku obraz s
 
 .. image:: {filename}/images/fs.jpg
 
-|
-|
-|Sparse files nie są jedynie domeną systemów UN*X. W systemie NTFS pliki tego typu możemy utworzyć komendą :bash:`fsutil`:
+Sparse files nie są jedynie domeną systemów UN*X. W systemie NTFS pliki tego typu możemy utworzyć komendą :bash:`fsutil`:
 
 .. code-block:: bash
 
