@@ -1,0 +1,230 @@
+Dlaczego @Value to zło
+######################
+
+:title: Dlaczego @Value to zło
+:date: 2020-04-07 21:00
+:slug: value-bad
+:category: programowanie
+:tags: java, spring, spring-boot
+
+.. role:: java(code)
+  :language: java
+
+.. role:: pyth(code)
+  :language: python
+
+.. role:: c(code)
+  :language: c
+
+.. role:: bash(code)
+  :language: bash
+
+
+Adnotacja :java:`@Value` służy, jak wiadomo, do wstrzykiwania wartości do pól czy też parametrów (konstruktorów i metod). 
+Sprawia to, że powszechnym jej zastosowaniem jest wczytywanie wartości z plików konfiguracyjnych. :java:`@Value` jest bardzo elastyczna. Umożliwia m.in. wstrzyknięcie
+literału, właściwości z pliku properties, właściwości systemowych, obsługuje wartości domyślne, kolekcje czy pozwala skorzystać z wyrażeń SpEL. 
+
+Przykładowe zastosowanie :java:`@Value` może wyglądać tak:
+
+.. code-block:: java
+
+ @Service
+ public class ExampleService {
+ 
+    @Value("${key.from.properties.file}")
+    private String importantValue;
+    
+ }
+
+W powyższym przypadku Spring odszuka w plikach properties klucz :java:`key.from.properties.file` i jego wartość wstrzyknie do zmiennej :java:`importantValue`. 
+Proste. Gdzie więc problem?
+Otóż w ten sposób, tak wstrzelone wartości (może nawet powtarzające sie), będziemy mieli w każdym komponencie, w każdym serwisie, kontrolerze i repozytorium. Innymi słowy,
+konfiguracja zostanie rozproszona po całej aplikacji. Odnalezienie, która klasa korzysta z wybranej właściwości będzie wymagało pełnotekstowego przeszukiwania kodu. 
+Podobnie choćby zwykła zmiana nazwy klucza.
+
+Jakie jest rozwiązanie? Hermetyzacja konfiguracji. Zamknijmy konfigurację w serwisie, a wtedy zmianą implementacji będziemy mogli zarządzać w sposób łatwy
+i przyjemny. Nic nie stanie na przeszkodzie, żeby dodać odpowiednie sanity checks, wprowadzić logowanie czy np. pobierać konfigurację
+z bazy danych zamiast z pliku.
+
+.. code-block:: java
+
+ @Service
+ public class ConfigService {
+    
+    @Value("${ftp.address}")
+    private String ftpAddress;
+
+    @Value("${ftp.user}")
+    private String ftpUser;
+
+    /* setters, getters, unit tests etc */
+
+ }
+
+ @Service
+ public class FtpService {
+
+    @Autowired
+    private ConfigurationService configuration;
+
+    /* implementation of ftp service */
+
+ }
+
+O krok dalej idzie **Spring Boot** udostępniając nam adnotację :java:`@ConfigurationProperties`. Jak można przeczytać w 
+`dokumentacji <https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config>`_
+służy ona do wydzielenia i udostępnienia na zewnątrz konfiguracji. Zakładając, że mamy następujący plik :java:`application.properties`:
+
+.. code-block:: java
+
+ myFtp.username=user
+ myFtp.password=pass
+ myFtp.ip=127.0.0.1
+
+możemy stworzyć następującą klasę dostarczającą konfigurację:
+
+.. code-block:: java
+
+ @Component
+ @EnableConfigurationProperties
+ @ConfigurationProperties(prefix="myFtp")
+ public class MyFtpServiceConfig {
+    
+    private String username;
+    private String password;
+    private String ip;
+
+    /* setters and getters */
+ }
+
+Kod, myślę, jest samowyjaśniający się. Z pliku konfiguracyjnego zostaną wzięte klucze prefiksowane ciągiem *myFtp* i ich wartości zostaną wstrzelone do odpowiednich pól klasy
+:java:`MyFtpServiceConfig`. Tak przygotowaną klasę możemy użyć w innym serwisie:
+
+.. code-block:: java
+
+ @Service
+ public class MyFtpClient {
+
+    private final MyFtpServiceConfig config;
+
+    @Autowired
+    public MyFtpClient(MyFtpServiceConfig config) {
+       this.config = config;
+    }
+
+    /* rest of the code */
+ }
+
+Więcej, możemy nie tylko używać wartości domyślnych, ale też serwis z konfiguracją może dostarczać nam wartości złożone z poszczególnych kluczy:
+
+.. code-block:: java
+
+ @Component
+ @EnableConfigurationProperties
+ @ConfigurationProperties(prefix="myFtp")
+ public class MyFtpServiceConfig {
+    
+    private String username;
+    private String password;
+    private String ip;
+    private String port = "21";
+
+    public String getUserInfo(){
+       return username + ":" + password;
+    }
+ }
+
+Ponadto, dzięki temu, że nasza konfiguracja jest zwykłym Beanem, możemy na przykład stworzyć jej różne implementacje:
+
+
+.. code-block:: java
+
+ public interface FtpServiceConfig {
+   
+    /* getters */
+ 
+ }
+
+ @Profile("prod")
+ @Component
+ @EnableConfigurationProperties
+ @ConfigurationProperties(prefix="myFtp")
+ public class MyFtpProdConfig implements FtpServiceConfig {
+
+    private String username;
+    private String password;
+    private String ip;
+
+    /* setters and getters */ 
+ }
+
+ @Profile("dev")
+ @Component
+ public class MyFtpDevConfig implements FtpServiceConfig {
+
+    private String username = "tester";
+    private String password = "abc123";
+    private String url = "ftp://localhost";
+
+    /* setters and getters */ 
+ }
+
+ @Service
+ public class MyFtpClient {
+
+    private final FtpServiceConfig config;
+
+    @Autowired
+    public MyFtpClient(FtpServiceConfig config) {
+        this.config = config;
+    }
+
+ }
+
+czy też skorzystać z walidacji zgodnych z JSR-303:
+
+.. code-block:: java
+
+ @Component
+ @EnableConfigurationProperties
+ @ConfigurationProperties(prefix="myFtp")
+ @Validated
+ public class MyFtpServiceConfig {
+    
+    @NotEmpty
+    private String username;
+    @Size(min=8)
+    private String password;
+
+Doszliśmy więc do etapu, w którym nasza konfiguracja jest serwisem z wydzielonym API zdefiniowanym w interfejsie. 
+Jej implementację możemy dowolnie modyfikować, zmieniać źródła konfiguracji, dodać walidatory czy testy jednostkowe. 
+Oddzieliliśmy w ten sposób konfigurację od logiki biznesowej co w znaczący sposób nie tylko zwiększa przejrzystość kodu, ale też i bezpieczeństwo aplikacji.
+
+Na koniec, dla kontrastu do tego, co wcześniej opisałem, chciałbym podzielić się pewnym 'kwiatkiem', z jakim kiedyś się spotkałem (wersja, oczywiście, uproszczona):
+
+.. code-block:: java
+
+ public class Foo {
+    /*
+       ** application.properties:
+       ** ftp.connection.string= ftp://user:pass@localhost:21
+    */
+     
+    @Value("${ftp.connection.string}")
+    private String ftpConnectionString;
+     
+    private String username;
+    private String password;
+    private String port;
+    private String host; 
+     
+    private void parseConfiguration() throws MalformedURLException {
+       URL url = new URL(ftpConnectionString);
+       String userInfo = url.getUserInfo();
+       String userInfoArray[] = userInfo.split(":");
+       host = url.getHost();
+       port = url.getPort();
+       username = userInfoArray[0];
+       password = userInfoArray[1];
+    }
+ } 
