@@ -30,17 +30,14 @@
 
 
     <!-- Bootstrap -->
-        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+        <link rel="stylesheet" href="/theme/css/bootstrap.cosmo.min.css" type="text/css"/>
     <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
 
     <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
     <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
 
-        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz ATOM Feed"/>
 
-        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+
 </head>
 <body>
 
@@ -98,6 +95,8 @@ Krzysiek Witkowicz            </a>
 
 
 
+        <span class="label label-default">Category</span>
+        <a href="/category/programowanie.html">programowanie</a>
 
 
 <span class="label label-default">Tags</span>
@@ -131,15 +130,15 @@ deskryptora pliku.</p>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
 <span class="p">{</span>
         <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span><span class="p">;</span> <span class="cm">/* fake file descriptor */</span>
-        <span class="kt">int</span> <span class="n">log_fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;my.log&quot;</span><span class="p">,</span> <span class="n">O_CREAT</span><span class="o">|</span><span class="n">O_WRONLY</span><span class="p">,</span> <span class="n">S_IRUSR</span><span class="o">|</span><span class="n">S_IWUSR</span><span class="p">);</span>
+        <span class="kt">int</span> <span class="n">log_fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">"my.log"</span><span class="p">,</span> <span class="n">O_CREAT</span><span class="o">|</span><span class="n">O_WRONLY</span><span class="p">,</span> <span class="n">S_IRUSR</span><span class="o">|</span><span class="n">S_IWUSR</span><span class="p">);</span>
 
         <span class="k">if</span><span class="p">(</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
-                <span class="n">write</span><span class="p">(</span><span class="n">log_fd</span><span class="p">,</span><span class="s">&quot;Problem with close!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="mi">19</span><span class="p">);</span>
+                <span class="n">write</span><span class="p">(</span><span class="n">log_fd</span><span class="p">,</span><span class="s">"Problem with close!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mi">19</span><span class="p">);</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">errno</span> <span class="o">==</span> <span class="n">EBADF</span><span class="p">){</span>
-                        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Bad file descriptor!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"Bad file descriptor!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
                 <span class="p">}</span>
                 <span class="k">else</span><span class="p">{</span>
-                        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">);</span>
+                        <span class="n">perror</span><span class="p">(</span><span class="s">"close"</span><span class="p">);</span>
                 <span class="p">}</span>
                 <span class="n">close</span><span class="p">(</span><span class="n">log_fd</span><span class="p">);</span>
         <span class="p">}</span>
@@ -154,7 +153,7 @@ Problem with close!
 pi@raspberrypi:~/c/err $
 </pre></div>
 <p>Dlaczego więc ten program jest błędny? Aby to sprawdzić, spróbujmy lekko go zmodyfikować, wywołując błąd w funkcji <code class="c"><span class="n">write</span></code>:</p>
-<div class="highlight"><pre><span></span><span class="n">write</span><span class="p">(</span><span class="n">log_fd</span><span class="p">,</span><span class="s">&quot;Problem with close!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="o">-</span><span class="mi">20</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="n">write</span><span class="p">(</span><span class="n">log_fd</span><span class="p">,</span><span class="s">"Problem with close!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="o">-</span><span class="mi">20</span><span class="p">);</span>
 </pre></div>
 <p>Tym razem informacja o błędzie jest inna:</p>
 <div class="highlight"><pre><span></span>pi@raspberrypi:~/c/err $ ./test2
@@ -175,16 +174,16 @@ FILE * f<span class="p">;</span>
 int main<span class="o">(</span>int argc, char * argv<span class="o">[])</span>
 <span class="o">{</span>
        int <span class="nv">fd</span> <span class="o">=</span> -3<span class="p">;</span> /* fake file descriptor */
-       int <span class="nv">log_fd</span> <span class="o">=</span> open<span class="o">(</span><span class="s2">&quot;my.log&quot;</span>, O_CREAT<span class="p">|</span>O_WRONLY, S_IRUSR<span class="p">|</span>S_IWUSR<span class="o">)</span><span class="p">;</span>
+       int <span class="nv">log_fd</span> <span class="o">=</span> open<span class="o">(</span><span class="s2">"my.log"</span>, O_CREAT<span class="p">|</span>O_WRONLY, S_IRUSR<span class="p">|</span>S_IWUSR<span class="o">)</span><span class="p">;</span>
 
        <span class="k">if</span><span class="o">(</span>close<span class="o">(</span>fd<span class="o">)</span> <span class="o">==</span> -1<span class="o">){</span>
                const int <span class="nv">err</span> <span class="o">=</span> errno<span class="p">;</span>
-               write<span class="o">(</span>log_fd,<span class="s2">&quot;Problem with close\n&quot;</span>,-20<span class="o">)</span><span class="p">;</span>
+               write<span class="o">(</span>log_fd,<span class="s2">"Problem with close\n"</span>,-20<span class="o">)</span><span class="p">;</span>
                <span class="k">if</span> <span class="o">(</span><span class="nv">err</span> <span class="o">==</span> EBADF<span class="o">){</span>
-                       fprintf<span class="o">(</span>stderr, <span class="s2">&quot;Bad file descriptor!\n&quot;</span><span class="o">)</span><span class="p">;</span>
+                       fprintf<span class="o">(</span>stderr, <span class="s2">"Bad file descriptor!\n"</span><span class="o">)</span><span class="p">;</span>
                <span class="o">}</span>
                <span class="k">else</span><span class="o">{</span>
-                       perror<span class="o">(</span><span class="s2">&quot;close&quot;</span><span class="o">)</span><span class="p">;</span>
+                       perror<span class="o">(</span><span class="s2">"close"</span><span class="o">)</span><span class="p">;</span>
                <span class="o">}</span>
                close<span class="o">(</span>log_fd<span class="o">)</span><span class="p">;</span>
        <span class="o">}</span>
@@ -202,44 +201,44 @@ Bad file descriptor!
 <p>Czy poniższy kod jest poprawny?</p>
 <div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">strtol</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;strtol&quot;</span><span class="p">);</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"strtol"</span><span class="p">);</span>
 </pre></div>
 <p>Otóż nie, gdyż istnieją funkcje (jak powyższa), dla których cały zakres zwracanych wartości jest poprawny. W takiej sytuacji należy pamiętać o
 wyzerowaniu zmiennej <code class="c"><span class="n">errno</span></code> przed zawołaniem funkcji, a po jej użyciu, ponownym sprawdzeniu <code class="c"><span class="n">errno</span></code>:</p>
 <div class="highlight"><pre><span></span><span class="n">errno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="n">ret</span> <span class="o">=</span> <span class="n">strtol</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="k">if</span> <span class="p">(</span><span class="n">errno</span><span class="p">)</span>
-        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;strtol&quot;</span><span class="p">);</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"strtol"</span><span class="p">);</span>
 </pre></div>
 <p>Skoro już jesteśmy przy <code class="c"><span class="n">strtol</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">nptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">endptr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">base</span><span class="p">)</span></code>, można wspomnieć o jeszcze jej jednej, ciekawej właściwości.
 Mianiowicie funkcja ta ustawia <code class="c"><span class="n">errno</span></code> jedynie w sytuacji przepełnienia (na kod <strong>ERANGE</strong>). Natomiast by stwierdzić błąd parsowania
 przekazanego napisu, należy sprawdzić wskaźnik <code class="c"><span class="n">endptr</span></code>:</p>
-<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">&quot;foobar&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">"foobar"</span><span class="p">;</span>
 <span class="kt">long</span> <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">char</span> <span class="o">*</span> <span class="n">ptr</span><span class="p">;</span>
 
 <span class="n">errno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="n">ret</span> <span class="o">=</span> <span class="n">strtol</span><span class="p">(</span><span class="n">str</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ptr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="k">if</span><span class="p">(</span><span class="n">errno</span><span class="p">)</span>
-       <span class="n">perror</span><span class="p">(</span><span class="s">&quot;strtol&quot;</span><span class="p">);</span>
+       <span class="n">perror</span><span class="p">(</span><span class="s">"strtol"</span><span class="p">);</span>
 <span class="k">if</span><span class="p">(</span><span class="n">ptr</span> <span class="o">==</span> <span class="n">str</span><span class="p">)</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;No conversion&quot;</span><span class="p">);</span>
-<span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">==</span> <span class="sc">&#39;\0&#39;</span><span class="p">)</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;The whole string has been converted&quot;</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"No conversion"</span><span class="p">);</span>
+<span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">==</span> <span class="sc">'\0'</span><span class="p">)</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"The whole string has been converted"</span><span class="p">);</span>
 <span class="k">else</span>
-       <span class="nf">printf</span><span class="p">(</span><span class="s">&quot;Ptr point to unconverted rest of the string&quot;</span><span class="p">);</span>
+       <span class="nf">printf</span><span class="p">(</span><span class="s">"Ptr point to unconverted rest of the string"</span><span class="p">);</span>
 </pre></div>
 <p>Jak łatwo można się przekonać, dla</p>
-<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">&quot;foobar&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">"foobar"</span><span class="p">;</span>
 </pre></div>
-<p>otrzymamy komunikat <strong>&quot;No conversion&quot;</strong>. Dla:</p>
-<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">&quot;111fobar&quot;</span><span class="p">;</span>
+<p>otrzymamy komunikat <strong>"No conversion"</strong>. Dla:</p>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">"111fobar"</span><span class="p">;</span>
 </pre></div>
-<p>wynikiem będzie komunikat <strong>&quot;Ptr point to unconverted rest of the string&quot;</strong>. Natomiast gdy będziemy chcieli sparsować zbyt
+<p>wynikiem będzie komunikat <strong>"Ptr point to unconverted rest of the string"</strong>. Natomiast gdy będziemy chcieli sparsować zbyt
 dużą wartość:</p>
-<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">&quot;9999999999999999&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="s">"9999999999999999"</span><span class="p">;</span>
 </pre></div>
-<p><code class="c"><span class="n">errno</span></code> zostanie ustawione na <strong>ERANGE</strong> o czym program nas poinformuje komunikatem <strong>&quot;strtol: Numerical result out of range&quot;</strong></p>
+<p><code class="c"><span class="n">errno</span></code> zostanie ustawione na <strong>ERANGE</strong> o czym program nas poinformuje komunikatem <strong>"strtol: Numerical result out of range"</strong></p>
 </div>
 
             </div>
@@ -267,11 +266,11 @@ dużą wartość:</p>
 <li class="list-group-item">
   <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
   <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2020/04/07/value-bad.html">Dlaczego @Value to zło</a></li>
     <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
     <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
-    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
   </ul>
 </li>
 <!-- End Sidebar/Recent Posts -->
@@ -284,19 +283,28 @@ dużą wartość:</p>
       <a href="/tag/raspberry-pi.html">raspberry pi</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/c.html">c</a>
+      <a href="/tag/kernel.html">kernel</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/kernel.html">kernel</a>
+      <a href="/tag/c.html">c</a>
     </li>
     <li class="list-group-item tag-2">
       <a href="/tag/linux.html">linux</a>
     </li>
     <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+    <li class="list-group-item tag-4">
       <a href="/tag/python.html">python</a>
     </li>
     <li class="list-group-item tag-4">
-      <a href="/tag/email.html">email</a>
+      <a href="/tag/java.html">java</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring-boot.html">spring-boot</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring.html">spring</a>
     </li>
   </ul>
 </li>
@@ -330,7 +338,7 @@ dużą wartość:</p>
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+         <div class="col-xs-10">&copy; 2020 Krzysiek Witkowicz
             &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>

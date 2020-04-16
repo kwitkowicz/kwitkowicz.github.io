@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="polish" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Dlaczego @Value to zło - Krzysiek Witkowicz</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="/posts/2020/04/07/value-bad.html">
+
+        <meta name="author" content="Krzysiek Witkowicz" />
+        <meta name="keywords" content="java,spring,spring-boot" />
+        <meta name="description" content="Adnotacja @Value służy, jak wiadomo, do wstrzykiwania wartości do pól czy też parametrów (konstruktorów i metod). Sprawia to, że powszechnym jej zastosowaniem jest wczytywanie wartości z plików konfiguracyjnych. @Value jest bardzo elastyczna. Umożliwia m.in. wstrzyknięcie literału, właściwości z pliku properties, właściwości systemowych, obsługuje wartości domyślne, kolekcje czy pozwala skorzystać …" />
+
+        <meta property="og:site_name" content="Krzysiek Witkowicz" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Dlaczego @Value to zło"/>
+        <meta property="og:url" content="/posts/2020/04/07/value-bad.html"/>
+        <meta property="og:description" content="Adnotacja @Value służy, jak wiadomo, do wstrzykiwania wartości do pól czy też parametrów (konstruktorów i metod). Sprawia to, że powszechnym jej zastosowaniem jest wczytywanie wartości z plików konfiguracyjnych. @Value jest bardzo elastyczna. Umożliwia m.in. wstrzyknięcie literału, właściwości z pliku properties, właściwości systemowych, obsługuje wartości domyślne, kolekcje czy pozwala skorzystać …"/>
+        <meta property="article:published_time" content="2020-04-07" />
+            <meta property="article:section" content="programowanie" />
+            <meta property="article:tag" content="java" />
+            <meta property="article:tag" content="spring" />
+            <meta property="article:tag" content="spring-boot" />
+            <meta property="article:author" content="Krzysiek Witkowicz" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.cosmo.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+
+
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Krzysiek Witkowicz            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/category/programowanie.html">Programowanie</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/posts/2020/04/07/value-bad.html"
+                       rel="bookmark"
+                       title="Permalink to Dlaczego @Value to zło">
+                        Dlaczego @Value to zło
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2020-04-07T21:00:00+02:00"> wto 07 kwietnia 2020</time>
+    </span>
+
+
+
+        <span class="label label-default">Category</span>
+        <a href="/category/programowanie.html">programowanie</a>
+
+
+<span class="label label-default">Tags</span>
+	<a href="/tag/java.html">java</a>
+        /
+	<a href="/tag/spring.html">spring</a>
+        /
+	<a href="/tag/spring-boot.html">spring-boot</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <p>Adnotacja <code class="java"><span class="nd">@Value</span></code> służy, jak wiadomo, do wstrzykiwania wartości do pól czy też parametrów (konstruktorów i metod).
+Sprawia to, że powszechnym jej zastosowaniem jest wczytywanie wartości z plików konfiguracyjnych. <code class="java"><span class="nd">@Value</span></code> jest bardzo elastyczna. Umożliwia m.in. wstrzyknięcie
+literału, właściwości z pliku properties, właściwości systemowych, obsługuje wartości domyślne, kolekcje czy pozwala skorzystać z wyrażeń SpEL.</p>
+<p>Przykładowe zastosowanie <code class="java"><span class="nd">@Value</span></code> może wyglądać tak:</p>
+<div class="highlight"><pre><span></span><span class="nd">@Service</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleService</span> <span class="p">{</span>
+
+   <span class="nd">@Value</span><span class="p">(</span><span class="s">"${key.from.properties.file}"</span><span class="p">)</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">importantValue</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+<p>W powyższym przypadku Spring odszuka w plikach properties klucz <code class="java"><span class="n">key</span><span class="p">.</span><span class="na">from</span><span class="p">.</span><span class="na">properties</span><span class="p">.</span><span class="na">file</span></code> i jego wartość wstrzyknie do zmiennej <code class="java"><span class="n">importantValue</span></code>.
+Proste. Gdzie więc problem?
+Otóż w ten sposób, tak wstrzelone wartości (może nawet powtarzające sie), będziemy mieli w każdym komponencie, w każdym serwisie, kontrolerze i repozytorium. Innymi słowy,
+konfiguracja zostanie rozproszona po całej aplikacji. Odnalezienie, która klasa korzysta z wybranej właściwości będzie wymagało pełnotekstowego przeszukiwania kodu.
+Podobnie choćby zwykła zmiana nazwy klucza.</p>
+<p>Jakie jest rozwiązanie? Hermetyzacja konfiguracji. Zamknijmy konfigurację w serwisie, a wtedy zmianą implementacji będziemy mogli zarządzać w sposób łatwy
+i przyjemny. Nic nie stanie na przeszkodzie, żeby dodać odpowiednie sanity checks, wprowadzić logowanie czy np. pobierać konfigurację
+z bazy danych zamiast z pliku.</p>
+<div class="highlight"><pre><span></span><span class="nd">@Service</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ConfigService</span> <span class="p">{</span>
+
+   <span class="nd">@Value</span><span class="p">(</span><span class="s">"${ftp.address}"</span><span class="p">)</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ftpAddress</span><span class="p">;</span>
+
+   <span class="nd">@Value</span><span class="p">(</span><span class="s">"${ftp.user}"</span><span class="p">)</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ftpUser</span><span class="p">;</span>
+
+   <span class="cm">/* setters, getters, unit tests etc */</span>
+
+<span class="p">}</span>
+
+<span class="nd">@Service</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">FtpService</span> <span class="p">{</span>
+
+   <span class="nd">@Autowired</span>
+   <span class="kd">private</span> <span class="n">ConfigurationService</span> <span class="n">configuration</span><span class="p">;</span>
+
+   <span class="cm">/* implementation of ftp service */</span>
+
+<span class="p">}</span>
+</pre></div>
+<p>O krok dalej idzie <strong>Spring Boot</strong> udostępniając nam adnotację <code class="java"><span class="nd">@ConfigurationProperties</span></code>. Jak można przeczytać w
+<a class="reference external" href="https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config">dokumentacji</a>
+służy ona do wydzielenia i udostępnienia na zewnątrz konfiguracji. Zakładając, że mamy następujący plik <code class="java"><span class="n">application</span><span class="p">.</span><span class="na">properties</span></code>:</p>
+<div class="highlight"><pre><span></span><span class="n">myFtp</span><span class="p">.</span><span class="na">username</span><span class="o">=</span><span class="n">user</span>
+<span class="n">myFtp</span><span class="p">.</span><span class="na">password</span><span class="o">=</span><span class="n">pass</span>
+<span class="n">myFtp</span><span class="p">.</span><span class="na">ip</span><span class="o">=</span><span class="mf">127.0.0.1</span>
+</pre></div>
+<p>możemy stworzyć następującą klasę dostarczającą konfigurację:</p>
+<div class="highlight"><pre><span></span><span class="nd">@Component</span>
+<span class="nd">@EnableConfigurationProperties</span>
+<span class="nd">@ConfigurationProperties</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">"myFtp"</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ip</span><span class="p">;</span>
+
+   <span class="cm">/* setters and getters */</span>
+<span class="p">}</span>
+</pre></div>
+<p>Kod, myślę, jest samowyjaśniający się. Z pliku konfiguracyjnego zostaną wzięte klucze prefiksowane ciągiem <em>myFtp</em> i ich wartości zostaną wstrzelone do odpowiednich pól klasy
+<code class="java"><span class="n">MyFtpServiceConfig</span></code>. Tak przygotowaną klasę możemy użyć w innym serwisie:</p>
+<div class="highlight"><pre><span></span><span class="nd">@Service</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpClient</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="kd">final</span> <span class="n">MyFtpServiceConfig</span> <span class="n">config</span><span class="p">;</span>
+
+   <span class="nd">@Autowired</span>
+   <span class="kd">public</span> <span class="nf">MyFtpClient</span><span class="p">(</span><span class="n">MyFtpServiceConfig</span> <span class="n">config</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="na">config</span> <span class="o">=</span> <span class="n">config</span><span class="p">;</span>
+   <span class="p">}</span>
+
+   <span class="cm">/* rest of the code */</span>
+<span class="p">}</span>
+</pre></div>
+<p>Więcej, możemy nie tylko używać wartości domyślnych, ale też serwis z konfiguracją może dostarczać nam wartości złożone z poszczególnych kluczy:</p>
+<div class="highlight"><pre><span></span><span class="nd">@Component</span>
+<span class="nd">@EnableConfigurationProperties</span>
+<span class="nd">@ConfigurationProperties</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">"myFtp"</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ip</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">port</span> <span class="o">=</span> <span class="s">"21"</span><span class="p">;</span>
+
+   <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUserInfo</span><span class="p">(){</span>
+      <span class="k">return</span> <span class="n">username</span> <span class="o">+</span> <span class="s">":"</span> <span class="o">+</span> <span class="n">password</span><span class="p">;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>Ponadto, dzięki temu, że nasza konfiguracja jest zwykłym Beanem, możemy na przykład stworzyć jej różne implementacje:</p>
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">FtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="cm">/* getters */</span>
+
+<span class="p">}</span>
+
+<span class="nd">@Profile</span><span class="p">(</span><span class="s">"prod"</span><span class="p">)</span>
+<span class="nd">@Component</span>
+<span class="nd">@EnableConfigurationProperties</span>
+<span class="nd">@ConfigurationProperties</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">"myFtp"</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpProdConfig</span> <span class="kd">implements</span> <span class="n">FtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ip</span><span class="p">;</span>
+
+   <span class="cm">/* setters and getters */</span>
+<span class="p">}</span>
+
+<span class="nd">@Profile</span><span class="p">(</span><span class="s">"dev"</span><span class="p">)</span>
+<span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpDevConfig</span> <span class="kd">implements</span> <span class="n">FtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span> <span class="o">=</span> <span class="s">"tester"</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span> <span class="o">=</span> <span class="s">"abc123"</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">url</span> <span class="o">=</span> <span class="s">"ftp://localhost"</span><span class="p">;</span>
+
+   <span class="cm">/* setters and getters */</span>
+<span class="p">}</span>
+
+<span class="nd">@Service</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpClient</span> <span class="p">{</span>
+
+   <span class="kd">private</span> <span class="kd">final</span> <span class="n">FtpServiceConfig</span> <span class="n">config</span><span class="p">;</span>
+
+   <span class="nd">@Autowired</span>
+   <span class="kd">public</span> <span class="nf">MyFtpClient</span><span class="p">(</span><span class="n">FtpServiceConfig</span> <span class="n">config</span><span class="p">)</span> <span class="p">{</span>
+       <span class="k">this</span><span class="p">.</span><span class="na">config</span> <span class="o">=</span> <span class="n">config</span><span class="p">;</span>
+   <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+<p>czy też skorzystać z walidacji zgodnych z JSR-303:</p>
+<div class="highlight"><pre><span></span><span class="nd">@Component</span>
+<span class="nd">@EnableConfigurationProperties</span>
+<span class="nd">@ConfigurationProperties</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">"myFtp"</span><span class="p">)</span>
+<span class="nd">@Validated</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFtpServiceConfig</span> <span class="p">{</span>
+
+   <span class="nd">@NotEmpty</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="p">;</span>
+   <span class="nd">@Size</span><span class="p">(</span><span class="n">min</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span><span class="p">;</span>
+</pre></div>
+<p>Doszliśmy więc do etapu, w którym nasza konfiguracja jest serwisem z wydzielonym API zdefiniowanym w interfejsie.
+Jej implementację możemy dowolnie modyfikować, zmieniać źródła konfiguracji, dodać walidatory czy testy jednostkowe.
+Oddzieliliśmy w ten sposób konfigurację od logiki biznesowej co w znaczący sposób nie tylko zwiększa przejrzystość kodu, ale też i bezpieczeństwo aplikacji.</p>
+<p>Na koniec, dla kontrastu do tego, co wcześniej opisałem, chciałbym podzielić się pewnym 'kwiatkiem', z jakim kiedyś się spotkałem (wersja, oczywiście, uproszczona):</p>
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="p">{</span>
+   <span class="cm">/*</span>
+<span class="cm">      ** application.properties:</span>
+<span class="cm">      ** ftp.connection.string= ftp://user:pass@localhost:21</span>
+<span class="cm">   */</span>
+
+   <span class="nd">@Value</span><span class="p">(</span><span class="s">"${ftp.connection.string}"</span><span class="p">)</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">ftpConnectionString</span><span class="p">;</span>
+
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">port</span><span class="p">;</span>
+   <span class="kd">private</span> <span class="n">String</span> <span class="n">host</span><span class="p">;</span>
+
+   <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseConfiguration</span><span class="p">()</span> <span class="kd">throws</span> <span class="n">MalformedURLException</span> <span class="p">{</span>
+      <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="n">URL</span><span class="p">(</span><span class="n">ftpConnectionString</span><span class="p">);</span>
+      <span class="n">String</span> <span class="n">userInfo</span> <span class="o">=</span> <span class="n">url</span><span class="p">.</span><span class="na">getUserInfo</span><span class="p">();</span>
+      <span class="n">String</span> <span class="n">userInfoArray</span><span class="o">[]</span> <span class="o">=</span> <span class="n">userInfo</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">":"</span><span class="p">);</span>
+      <span class="n">host</span> <span class="o">=</span> <span class="n">url</span><span class="p">.</span><span class="na">getHost</span><span class="p">();</span>
+      <span class="n">port</span> <span class="o">=</span> <span class="n">url</span><span class="p">.</span><span class="na">getPort</span><span class="p">();</span>
+      <span class="n">username</span> <span class="o">=</span> <span class="n">userInfoArray</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="p">;</span>
+      <span class="n">password</span> <span class="o">=</span> <span class="n">userInfoArray</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span><span class="p">;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="http://github.com/kwitkowicz"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Recent Posts -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
+  <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2020/04/07/value-bad.html">Dlaczego @Value to zło</a></li>
+    <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
+    <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
+    <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Recent Posts -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-1">
+      <a href="/tag/raspberry-pi.html">raspberry pi</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/kernel.html">kernel</a>
+    </li>
+    <li class="list-group-item tag-1">
+      <a href="/tag/c.html">c</a>
+    </li>
+    <li class="list-group-item tag-2">
+      <a href="/tag/linux.html">linux</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/python.html">python</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/java.html">java</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring-boot.html">spring-boot</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring.html">spring</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+
+<!-- Sidebar/Links -->
+<li class="list-group-item">
+  <h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Links</span></h4>
+  <ul class="list-group" id="links">
+    <li class="list-group-item">
+      <a href="http://getpelican.com/" target="_blank">Pelican</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://python.org/" target="_blank">Python.org</a>
+    </li>
+    <li class="list-group-item">
+      <a href="http://jinja.pocoo.org/" target="_blank">Jinja2</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Links -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2020 Krzysiek Witkowicz
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
+    Content
+  licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish">Creative Commons Attribution-ShareAlike 4.0 International License</a>, except where indicated otherwise.
+</small></p>
+         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>

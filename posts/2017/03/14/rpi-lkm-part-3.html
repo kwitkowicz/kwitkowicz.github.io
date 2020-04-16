@@ -30,17 +30,14 @@
 
 
     <!-- Bootstrap -->
-        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+        <link rel="stylesheet" href="/theme/css/bootstrap.cosmo.min.css" type="text/css"/>
     <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
 
     <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
     <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
 
-        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz ATOM Feed"/>
 
-        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+
 </head>
 <body>
 
@@ -98,6 +95,8 @@ Krzysiek Witkowicz            </a>
 
 
 
+        <span class="label label-default">Category</span>
+        <a href="/category/programowanie.html">programowanie</a>
 
 
 <span class="label label-default">Tags</span>
@@ -198,10 +197,10 @@ polecenie <code class="bash">mknod</code>:</p>
 <li><strong>name</strong> - wkaźnik na łańcuch znaków z nazwą klasy</li>
 </ul>
 <p>W naszym przypadku będzie to klasa <code class="c"><span class="n">mychar_class</span></code>:</p>
-<div class="highlight"><pre><span></span><span class="n">mychar_dev_class</span> <span class="o">=</span> <span class="n">class_create</span><span class="p">(</span><span class="n">THIS_MODULE</span><span class="p">,</span> <span class="s">&quot;mychar_class&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="n">mychar_dev_class</span> <span class="o">=</span> <span class="n">class_create</span><span class="p">(</span><span class="n">THIS_MODULE</span><span class="p">,</span> <span class="s">"mychar_class"</span><span class="p">);</span>
          <span class="k">if</span><span class="p">(</span><span class="n">IS_ERR</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">)){</span>
                  <span class="n">unregister_chrdev</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="n">MY_DEVICE_NAME</span><span class="p">);</span>
-                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span><span class="p">,</span> <span class="s">&quot;mychar_dev: fail while register device class&quot;</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span><span class="p">,</span> <span class="s">"mychar_dev: fail while register device class"</span><span class="p">);</span>
                  <span class="k">return</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">);</span>
          <span class="p">}</span>
 </pre></div>
@@ -232,11 +231,11 @@ lrwxrwxrwx <span class="m">1</span> root root    <span class="m">0</span> mar  <
 </ul>
 <p>Poniższy fragment kodu tworzy plik urządzenia <code class="bash">/dev/mychar</code>. Nie trzeba wołać z przestrzeni użytkownika polecenia
 <code class="bash">mknod</code> - wszystko dzieje się w przestrzeni jądra.</p>
-<div class="highlight"><pre><span></span><span class="n">mychar_dev</span> <span class="o">=</span> <span class="n">device_create</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">MKDEV</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;mychar&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="n">mychar_dev</span> <span class="o">=</span> <span class="n">device_create</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">MKDEV</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">"mychar"</span><span class="p">);</span>
          <span class="k">if</span> <span class="p">(</span><span class="n">IS_ERR</span><span class="p">(</span><span class="n">mychar_dev</span><span class="p">)){</span>
                  <span class="n">class_destroy</span><span class="p">(</span><span class="n">mychar_dev_class</span><span class="p">);</span>
-                 <span class="n">unregister_chrdev</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="s">&quot;mychar&quot;</span><span class="p">);</span>
-                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">&quot;Failed to create the device</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="n">unregister_chrdev</span><span class="p">(</span><span class="n">major_number</span><span class="p">,</span> <span class="s">"mychar"</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"Failed to create the device</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
                  <span class="k">return</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">mychar_dev</span><span class="p">);</span>
          <span class="p">}</span>
 </pre></div>
@@ -255,7 +254,7 @@ natomiast można skorzystać z makr:</p>
 <p>Następnie zaimplementujemy funkcje wskazywane przez <code class="c"><span class="n">file_operations</span></code>. Na początek funkcja wykonywana za każdym razem,
 gdy urządzenie jest otwierane przez program z przestrzeni użytkownika:</p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">mychar_dev_open</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">){</span>
-         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: device opened</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">"mychar_dev: device opened</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
          <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -266,7 +265,7 @@ gdy urządzenie jest otwierane przez program z przestrzeni użytkownika:</p>
 <p>Jak widać funkcja nie implementuje większej logiki, zrzuca jedynie do logu informację o otworzeniu pliku. W analogiczny
 sposób napiszemy funkcję wykonywaną przy zamknięciu/zwolnieniu urządzenia:</p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">mychar_dev_release</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">){</span>
-         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: device closed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">"mychar_dev: device closed</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
          <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -275,11 +274,11 @@ sposób napiszemy funkcję wykonywaną przy zamknięciu/zwolnieniu urządzenia:<
          <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
          <span class="n">ret</span> <span class="o">=</span> <span class="n">copy_to_user</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">msg_length</span><span class="p">);</span>
          <span class="k">if</span><span class="p">(</span><span class="n">ret</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
-                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: %d bytes send to client</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">"mychar_dev: %d bytes send to client</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
                  <span class="k">return</span><span class="p">(</span><span class="n">msg_length</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
          <span class="p">}</span>
          <span class="k">else</span><span class="p">{</span>
-                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">&quot;mychar_dev: failed while send data</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                 <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"mychar_dev: failed while send data</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
                  <span class="k">return</span> <span class="o">-</span><span class="n">EFAULT</span><span class="p">;</span>
          <span class="p">}</span>
 <span class="p">}</span>
@@ -303,9 +302,9 @@ bezpośrednia próba skopiowania danych z przestrzeni jądra do przestrzeni uży
 ochrony pamięci.</p>
 <p>Na koniec zaimplementujemy funkcję wykonywaną podczas zapisu do urządzenia z przestrzeni użytkownika.</p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">mychar_dev_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span> <span class="n">filep</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buff</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">buff_len</span><span class="p">,</span> <span class="n">loff_t</span> <span class="o">*</span> <span class="n">offset</span><span class="p">){</span>
-         <span class="n">sprintf</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s">&quot;%s&quot;</span><span class="p">,</span><span class="n">buff</span><span class="p">);</span>
+         <span class="n">sprintf</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s">"%s"</span><span class="p">,</span><span class="n">buff</span><span class="p">);</span>
          <span class="n">msg_length</span> <span class="o">=</span> <span class="n">strlen</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
-         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&quot;mychar_dev: Received %Iu characters from client</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">msg_length</span><span class="p">);</span>
+         <span class="n">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">"mychar_dev: Received %Iu characters from client</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">msg_length</span><span class="p">);</span>
          <span class="k">return</span> <span class="n">buff_len</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -330,29 +329,29 @@ kilku sekundach odczyta i wypisze odpowiedź:</p>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
        <span class="kt">int</span> <span class="n">ret</span><span class="p">,</span> <span class="n">fd</span><span class="p">;</span>
        <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="n">MAX_BUFFER_LEN</span><span class="p">];</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Opening character device</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-       <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/mychar&quot;</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"Opening character device</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+       <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">"/dev/mychar"</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span>
        <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to open the device.&quot;</span><span class="p">);</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">"Failed to open the device."</span><span class="p">);</span>
                <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
        <span class="p">}</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Type text to send to kernel:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-       <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%[^</span><span class="se">\n</span><span class="s">]%*c&quot;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Writing message to the device [%s].</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"Type text to send to kernel:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+       <span class="n">scanf</span><span class="p">(</span><span class="s">"%[^</span><span class="se">\n</span><span class="s">]%*c"</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"Writing message to the device [%s].</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
        <span class="n">ret</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
        <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to write the message to the device.&quot;</span><span class="p">);</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">"Failed to write the message to the device."</span><span class="p">);</span>
                <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
        <span class="p">}</span>
        <span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Wait 5 seconds for reading back from the device.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Reading from the device...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"Wait 5 seconds for reading back from the device.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"Reading from the device...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
        <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">MAX_BUFFER_LEN</span><span class="p">);</span>
        <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-               <span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to read the message from the device.&quot;</span><span class="p">);</span>
+               <span class="n">perror</span><span class="p">(</span><span class="s">"Failed to read the message from the device."</span><span class="p">);</span>
                <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
        <span class="p">}</span>
-       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;The read message is: [%s]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">receive</span><span class="p">);</span>
+       <span class="n">printf</span><span class="p">(</span><span class="s">"The read message is: [%s]</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">receive</span><span class="p">);</span>
        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -401,11 +400,11 @@ Ale o tym w następnym <a class="reference external" href="/posts/2017/08/20/lse
 <li class="list-group-item">
   <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
   <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2020/04/07/value-bad.html">Dlaczego @Value to zło</a></li>
     <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
     <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
-    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
   </ul>
 </li>
 <!-- End Sidebar/Recent Posts -->
@@ -418,19 +417,28 @@ Ale o tym w następnym <a class="reference external" href="/posts/2017/08/20/lse
       <a href="/tag/raspberry-pi.html">raspberry pi</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/c.html">c</a>
+      <a href="/tag/kernel.html">kernel</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/kernel.html">kernel</a>
+      <a href="/tag/c.html">c</a>
     </li>
     <li class="list-group-item tag-2">
       <a href="/tag/linux.html">linux</a>
     </li>
     <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+    <li class="list-group-item tag-4">
       <a href="/tag/python.html">python</a>
     </li>
     <li class="list-group-item tag-4">
-      <a href="/tag/email.html">email</a>
+      <a href="/tag/java.html">java</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring-boot.html">spring-boot</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring.html">spring</a>
     </li>
   </ul>
 </li>
@@ -464,7 +472,7 @@ Ale o tym w następnym <a class="reference external" href="/posts/2017/08/20/lse
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+         <div class="col-xs-10">&copy; 2020 Krzysiek Witkowicz
             &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>

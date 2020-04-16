@@ -29,17 +29,14 @@
 
 
     <!-- Bootstrap -->
-        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+        <link rel="stylesheet" href="/theme/css/bootstrap.cosmo.min.css" type="text/css"/>
     <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
 
     <link href="/theme/css/pygments/solarizeddark.css" rel="stylesheet">
     <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
 
-        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz ATOM Feed"/>
 
-        <link href="/feeds/programowanie.atom.xml" type="application/atom+xml" rel="alternate"
-              title="Krzysiek Witkowicz programowanie ATOM Feed"/>
+
 </head>
 <body>
 
@@ -97,6 +94,8 @@ Krzysiek Witkowicz            </a>
 
 
 
+        <span class="label label-default">Category</span>
+        <a href="/category/programowanie.html">programowanie</a>
 
 
 <span class="label label-default">Tags</span>
@@ -119,16 +118,16 @@ Poniższy program pokazuje próbę prostej komunikacji z serwerem poczty wychodz
 <span class="kn">import</span> <span class="nn">email.mime.multipart</span>
 <span class="kn">import</span> <span class="nn">email.mime.text</span>
 
-<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">&#39;gmail-smtp-in.l.google.com&#39;</span>
+<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">'gmail-smtp-in.l.google.com'</span>
 <span class="n">SMTP_PORT</span> <span class="o">=</span> <span class="mi">25</span>
 
 <span class="n">message</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">multipart</span><span class="o">.</span><span class="n">MIMEMultipart</span><span class="p">()</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;TO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter &#39;To&#39; email adress: &quot;</span><span class="p">)</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter &#39;From&#39; email address: &quot;</span><span class="p">)</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter subject of your email: &quot;</span><span class="p">)</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'TO'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter 'To' email adress: "</span><span class="p">)</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'FROM'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter 'From' email address: "</span><span class="p">)</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'Subject'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter subject of your email: "</span><span class="p">)</span>
 
-<span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;plain&#39;</span><span class="p">)</span>
-<span class="n">payload</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter your message: &quot;</span><span class="p">)</span>
+<span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">'text'</span><span class="p">,</span> <span class="s1">'plain'</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter your message: "</span><span class="p">)</span>
 <span class="n">message_part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">message_part</span><span class="p">)</span>
@@ -136,27 +135,27 @@ Poniższy program pokazuje próbę prostej komunikacji z serwerem poczty wychodz
 <span class="n">session</span> <span class="o">=</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTP</span><span class="p">(</span><span class="n">SMTP_SERVER</span><span class="p">,</span> <span class="n">SMTP_PORT</span><span class="p">)</span>
 <span class="n">session</span><span class="o">.</span><span class="n">ehlo</span><span class="p">()</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="n">session</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">],</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;TO&#39;</span><span class="p">],</span> <span class="n">message</span><span class="o">.</span><span class="n">as_string</span><span class="p">())</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">'FROM'</span><span class="p">],</span> <span class="n">message</span><span class="p">[</span><span class="s1">'TO'</span><span class="p">],</span> <span class="n">message</span><span class="o">.</span><span class="n">as_string</span><span class="p">())</span>
     <span class="n">session</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 <span class="k">except</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTPHeloError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-    <span class="nb">print</span> <span class="s2">&quot;Server didn&#39;t reply properly to helo&quot;</span>
+    <span class="nb">print</span> <span class="s2">"Server didn't reply properly to helo"</span>
     <span class="nb">print</span> <span class="n">ex</span><span class="o">.</span><span class="n">message</span>
 <span class="k">except</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTPRecipientsRefused</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-    <span class="nb">print</span> <span class="s2">&quot;Server rejected recipients&quot;</span>
+    <span class="nb">print</span> <span class="s2">"Server rejected recipients"</span>
     <span class="nb">print</span> <span class="n">ex</span><span class="o">.</span><span class="n">message</span>
 <span class="k">except</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTPSenderRefused</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-    <span class="nb">print</span> <span class="s2">&quot;Server didn&#39;t accept From address&quot;</span>
+    <span class="nb">print</span> <span class="s2">"Server didn't accept From address"</span>
     <span class="nb">print</span> <span class="n">ex</span><span class="o">.</span><span class="n">message</span>
 <span class="k">except</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTPDataError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-    <span class="nb">print</span> <span class="s2">&quot;Unexpected error&quot;</span>
+    <span class="nb">print</span> <span class="s2">"Unexpected error"</span>
     <span class="nb">print</span> <span class="n">ex</span><span class="o">.</span><span class="n">message</span>
 <span class="k">except</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTPServerDisconnected</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-    <span class="nb">print</span> <span class="s2">&quot;Connection closed&quot;</span>
+    <span class="nb">print</span> <span class="s2">"Connection closed"</span>
     <span class="nb">print</span> <span class="n">ex</span><span class="o">.</span><span class="n">message</span>
 </pre></div>
 <p>Próba uruchomienia kończy się, niestety, porażką:</p>
-<div class="highlight"><pre><span></span>Enter <span class="s1">&#39;To&#39;</span> email adress: username@gmail.com
-Enter <span class="s1">&#39;From&#39;</span> email address: username@gmail.com
+<div class="highlight"><pre><span></span>Enter <span class="s1">'To'</span> email adress: username@gmail.com
+Enter <span class="s1">'From'</span> email address: username@gmail.com
 Enter subject of your email: Test
 Enter your message: Hello World!
 Connection closed
@@ -166,18 +165,18 @@ Process finished with <span class="nb">exit</span> code <span class="m">0</span>
 </pre></div>
 <p>Do znalezienia błędu wykorzystamy metodę <code class="pyth python"><span class="n">set_debug_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></code> jaką udostępnia nam klasa <code class="pyth python"><span class="n">SMTP</span></code>.
 Pozwoli ona podejrzeć wszystkie informacje, zarówno wysyłane do serwera jak i od niego otrzymane:</p>
-<div class="highlight"><pre><span></span>Enter <span class="s1">&#39;To&#39;</span> email adress: username@gmail.com
-Enter <span class="s1">&#39;From&#39;</span> email address: username@gmail.com
+<div class="highlight"><pre><span></span>Enter <span class="s1">'To'</span> email adress: username@gmail.com
+Enter <span class="s1">'From'</span> email address: username@gmail.com
 Enter subject of your email: Test
 Enter your message: Hello World!
-send: <span class="s1">&#39;ehlo [192.168.56.1]\r\n&#39;</span>
-reply: <span class="s1">&#39;250-mx.google.com at your service, [46.215.215.74]\r\n&#39;</span>
-reply: <span class="s1">&#39;250-SIZE 157286400\r\n&#39;</span>
-reply: <span class="s1">&#39;250-8BITMIME\r\n&#39;</span>
-reply: <span class="s1">&#39;250-STARTTLS\r\n&#39;</span>
-reply: <span class="s1">&#39;250-ENHANCEDSTATUSCODES\r\n&#39;</span>
-reply: <span class="s1">&#39;250-PIPELINING\r\n&#39;</span>
-reply: <span class="s1">&#39;250 SMTPUTF8\r\n&#39;</span>
+send: <span class="s1">'ehlo [192.168.56.1]\r\n'</span>
+reply: <span class="s1">'250-mx.google.com at your service, [46.215.215.74]\r\n'</span>
+reply: <span class="s1">'250-SIZE 157286400\r\n'</span>
+reply: <span class="s1">'250-8BITMIME\r\n'</span>
+reply: <span class="s1">'250-STARTTLS\r\n'</span>
+reply: <span class="s1">'250-ENHANCEDSTATUSCODES\r\n'</span>
+reply: <span class="s1">'250-PIPELINING\r\n'</span>
+reply: <span class="s1">'250 SMTPUTF8\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">250</span><span class="o">)</span><span class="p">;</span> Msg: mx.google.com at your service, <span class="o">[</span><span class="m">46</span>.215.215.74<span class="o">]</span>
 SIZE <span class="m">157286400</span>
 8BITMIME
@@ -185,29 +184,29 @@ STARTTLS
 ENHANCEDSTATUSCODES
 PIPELINING
 SMTPUTF8
-send: <span class="s1">&#39;mail FROM:&lt;username@gmail.com&gt; size=340\r\n&#39;</span>
-reply: <span class="s1">&#39;250 2.1.0 OK 88si2341819lfx.293 - gsmtp\r\n&#39;</span>
+send: <span class="s1">'mail FROM:&lt;username@gmail.com&gt; size=340\r\n'</span>
+reply: <span class="s1">'250 2.1.0 OK 88si2341819lfx.293 - gsmtp\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">250</span><span class="o">)</span><span class="p">;</span> Msg: <span class="m">2</span>.1.0 OK 88si2341819lfx.293 - gsmtp
-send: <span class="s1">&#39;rcpt TO:&lt;username@gmail.com&gt;\r\n&#39;</span>
-reply: <span class="s1">&#39;250 2.1.5 OK 88si2341819lfx.293 - gsmtp\r\n&#39;</span>
+send: <span class="s1">'rcpt TO:&lt;username@gmail.com&gt;\r\n'</span>
+reply: <span class="s1">'250 2.1.5 OK 88si2341819lfx.293 - gsmtp\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">250</span><span class="o">)</span><span class="p">;</span> Msg: <span class="m">2</span>.1.5 OK 88si2341819lfx.293 - gsmtp
-send: <span class="s1">&#39;data\r\n&#39;</span>
-reply: <span class="s1">&#39;354  Go ahead 88si2341819lfx.293 - gsmtp\r\n&#39;</span>
+send: <span class="s1">'data\r\n'</span>
+reply: <span class="s1">'354  Go ahead 88si2341819lfx.293 - gsmtp\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">354</span><span class="o">)</span><span class="p">;</span> Msg: Go ahead 88si2341819lfx.293 - gsmtp
-data: <span class="o">(</span><span class="m">354</span>, <span class="s1">&#39;Go ahead 88si2341819lfx.293 - gsmtp&#39;</span><span class="o">)</span>
-send: <span class="s1">&#39;Content-Type: multipart/mixed; boundary=&quot;===============1757486702==&quot;\r\nMIME-Version: 1.0\r\nTO: username@gmail.com\r\nFROM: username@gmail.com\r\nSubject: Test\r\n\r\n--===============1757486702==\r\nContent-Type: text/plain; charset=&quot;us-ascii&quot;\r\nMIME-Version: 1.0\r\nContent-Transfer-Encoding: 7bit\r\n\r\nHello World!\r\n--===============1757486702==--\r\n.\r\n&#39;</span>
-reply: <span class="s1">&#39;421-4.7.0 [46.215.215.74      15] Our system has detected that this message is\r\n&#39;</span>
-reply: <span class="s1">&#39;421-4.7.0 suspicious due to the very low reputation of the sending IP address.\r\n&#39;</span>
-reply: <span class="s1">&#39;421-4.7.0 To protect our users from spam, mail sent from your IP address has\r\n&#39;</span>
-reply: <span class="s1">&#39;421-4.7.0 been temporarily rate limited. Please visit\r\n&#39;</span>
-reply: <span class="s1">&#39;421 4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp\r\n&#39;</span>
+data: <span class="o">(</span><span class="m">354</span>, <span class="s1">'Go ahead 88si2341819lfx.293 - gsmtp'</span><span class="o">)</span>
+send: <span class="s1">'Content-Type: multipart/mixed; boundary="===============1757486702=="\r\nMIME-Version: 1.0\r\nTO: username@gmail.com\r\nFROM: username@gmail.com\r\nSubject: Test\r\n\r\n--===============1757486702==\r\nContent-Type: text/plain; charset="us-ascii"\r\nMIME-Version: 1.0\r\nContent-Transfer-Encoding: 7bit\r\n\r\nHello World!\r\n--===============1757486702==--\r\n.\r\n'</span>
+reply: <span class="s1">'421-4.7.0 [46.215.215.74      15] Our system has detected that this message is\r\n'</span>
+reply: <span class="s1">'421-4.7.0 suspicious due to the very low reputation of the sending IP address.\r\n'</span>
+reply: <span class="s1">'421-4.7.0 To protect our users from spam, mail sent from your IP address has\r\n'</span>
+reply: <span class="s1">'421-4.7.0 been temporarily rate limited. Please visit\r\n'</span>
+reply: <span class="s1">'421 4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">421</span><span class="o">)</span><span class="p">;</span> Msg: <span class="m">4</span>.7.0 <span class="o">[</span><span class="m">46</span>.215.215.74      <span class="m">15</span><span class="o">]</span> Our system has detected that this message is
 <span class="m">4</span>.7.0 suspicious due to the very low reputation of the sending IP address.
 <span class="m">4</span>.7.0 To protect our users from spam, mail sent from your IP address has
 <span class="m">4</span>.7.0 been temporarily rate limited. Please visit
 <span class="m">4</span>.7.0  https://support.google.com/mail/answer/188131 <span class="k">for</span> more information. 88si2341819lfx.293 - gsmtp
-data: <span class="o">(</span><span class="m">421</span>, <span class="s1">&#39;4.7.0 [46.215.215.74      15] Our system has detected that this message is\n4.7.0 suspicious due to the very low reputation of the sending IP address.\n4.7.0 To protect our users from spam, mail sent from your IP address has\n4.7.0 been temporarily rate limited. Please visit\n4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp&#39;</span><span class="o">)</span>
-send: <span class="s1">&#39;rset\r\n&#39;</span>
+data: <span class="o">(</span><span class="m">421</span>, <span class="s1">'4.7.0 [46.215.215.74      15] Our system has detected that this message is\n4.7.0 suspicious due to the very low reputation of the sending IP address.\n4.7.0 To protect our users from spam, mail sent from your IP address has\n4.7.0 been temporarily rate limited. Please visit\n4.7.0  https://support.google.com/mail/answer/188131 for more information. 88si2341819lfx.293 - gsmtp'</span><span class="o">)</span>
+send: <span class="s1">'rset\r\n'</span>
 Connection closed
 Connection unexpectedly closed: <span class="o">[</span>Errno <span class="m">10053</span><span class="o">]</span> Nawiązane połączenie zostało przerwane przez oprogramowanie zainstalowane w komputerze-hoťcie
 </pre></div>
@@ -220,17 +219,17 @@ i hasłem do konta <code class="pyth python"><span class="n">SMTP</span><span cl
 <span class="kn">import</span> <span class="nn">email.mime.multipart</span>
 <span class="kn">import</span> <span class="nn">email.mime.text</span>
 
-<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">&#39;smtp.gmail.com&#39;</span>
+<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">'smtp.gmail.com'</span>
 <span class="n">SMTP_PORT</span> <span class="o">=</span> <span class="mi">587</span>
 
 <span class="n">message</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">multipart</span><span class="o">.</span><span class="n">MIMEMultipart</span><span class="p">()</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;TO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter &#39;To&#39; email adress: &quot;</span><span class="p">)</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter &#39;From&#39; email address: &quot;</span><span class="p">)</span>
-<span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="s1">&#39;Enter password: &quot;)</span>
-<span class="n">message</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter subject of your email: &quot;</span><span class="p">)</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'TO'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter 'To' email adress: "</span><span class="p">)</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'FROM'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter 'From' email address: "</span><span class="p">)</span>
+<span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="s1">'Enter password: ")</span>
+<span class="n">message</span><span class="p">[</span><span class="s1">'Subject'</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter subject of your email: "</span><span class="p">)</span>
 
-<span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;plain&#39;</span><span class="p">)</span>
-<span class="n">payload</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;Enter your message: &quot;</span><span class="p">)</span>
+<span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">'text'</span><span class="p">,</span> <span class="s1">'plain'</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">"Enter your message: "</span><span class="p">)</span>
 <span class="n">message_part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">message_part</span><span class="p">)</span>
 
@@ -238,45 +237,45 @@ i hasłem do konta <code class="pyth python"><span class="n">SMTP</span><span cl
 <span class="n">server</span><span class="o">.</span><span class="n">set_debuglevel</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">server</span><span class="o">.</span><span class="n">ehlo</span><span class="p">()</span>
 <span class="n">server</span><span class="o">.</span><span class="n">starttls</span><span class="p">()</span>
-<span class="n">server</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">],</span> <span class="n">password</span><span class="p">)</span>
-<span class="n">server</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">],</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;TO&#39;</span><span class="p">],</span> <span class="n">message</span><span class="o">.</span><span class="n">as_string</span><span class="p">())</span>
+<span class="n">server</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">'FROM'</span><span class="p">],</span> <span class="n">password</span><span class="p">)</span>
+<span class="n">server</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="s1">'FROM'</span><span class="p">],</span> <span class="n">message</span><span class="p">[</span><span class="s1">'TO'</span><span class="p">],</span> <span class="n">message</span><span class="o">.</span><span class="n">as_string</span><span class="p">())</span>
 <span class="n">server</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 </pre></div>
 <p>Niestety, próba wysłania wiadomości kończy się kolejnym błędem:</p>
-<div class="highlight"><pre><span></span>smtplib.SMTPAuthenticationError: <span class="o">(</span><span class="m">534</span>, <span class="s1">&#39;5.7.9 Application-specific password required. Learn more at\n5.7.9  https://support.google.com/mail/?p=InvalidSecondFactor m18sm1211864ljb.8 - gsmtp&#39;</span><span class="o">)</span>
+<div class="highlight"><pre><span></span>smtplib.SMTPAuthenticationError: <span class="o">(</span><span class="m">534</span>, <span class="s1">'5.7.9 Application-specific password required. Learn more at\n5.7.9  https://support.google.com/mail/?p=InvalidSecondFactor m18sm1211864ljb.8 - gsmtp'</span><span class="o">)</span>
 </pre></div>
 <p>Krótka lektura informacji spod wskazanego w opisie błędu linka wyjaśnia, że problem wynika z dwuskładnikowego uwierzytelniania
 i jego rozwiązaniem jest zautoryzowanie się hasłem wygenerowanym z poziomu ustawień konta. Postępując zgodnie z instrukcją
 otrzymamy ciąg 16-tu znaków, który zastąpi nam nasze hasło do konta. Kolejna próba kończy się sukcesem:</p>
-<div class="highlight"><pre><span></span>send: <span class="s1">&#39;quit\r\n&#39;</span>
-reply: <span class="s1">&#39;221 2.0.0 closing connection 75sm2003575lfy.27 - gsmtp\r\n&#39;</span>
+<div class="highlight"><pre><span></span>send: <span class="s1">'quit\r\n'</span>
+reply: <span class="s1">'221 2.0.0 closing connection 75sm2003575lfy.27 - gsmtp\r\n'</span>
 reply: retcode <span class="o">(</span><span class="m">221</span><span class="o">)</span><span class="p">;</span> Msg: <span class="m">2</span>.0.0 closing connection 75sm2003575lfy.27 - gsmtp
 </pre></div>
 <p>Skoro umiemy już wysłać email, spróbujmy go rozbudować. Stwórzmy np. wiadomość w HTMLu dodając jednocześnie alternatywny czysty tekst:</p>
-<div class="highlight"><pre><span></span><span class="n">message</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">multipart</span><span class="o">.</span><span class="n">MIMEMultipart</span><span class="p">(</span><span class="s1">&#39;alternative&#39;</span><span class="p">)</span>
-<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hello!</span><span class="se">\n</span><span class="s2">What&#39;s your name?&quot;</span>
-<span class="n">html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<div class="highlight"><pre><span></span><span class="n">message</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">multipart</span><span class="o">.</span><span class="n">MIMEMultipart</span><span class="p">(</span><span class="s1">'alternative'</span><span class="p">)</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">"Hello!</span><span class="se">\n</span><span class="s2">What's your name?"</span>
+<span class="n">html</span> <span class="o">=</span> <span class="s2">"""</span><span class="se">\</span>
 <span class="s2">&lt;html&gt;</span>
 <span class="s2"> &lt;head&gt;&lt;/head&gt;</span>
 <span class="s2"> &lt;body&gt;</span>
 <span class="s2">   &lt;h1&gt;Hello!&lt;/h1&gt;&lt;br&gt;</span>
-<span class="s2">   &lt;p&gt;What&#39;s your name?&lt;/p&gt;</span>
+<span class="s2">   &lt;p&gt;What's your name?&lt;/p&gt;</span>
 <span class="s2"> &lt;/body&gt;</span>
 <span class="s2">&lt;/html&gt;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">part_plain</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;plain&#39;</span><span class="p">)</span>
-<span class="n">part_html</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">)</span>
+<span class="s2">"""</span>
+<span class="n">part_plain</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s1">'plain'</span><span class="p">)</span>
+<span class="n">part_html</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s1">'html'</span><span class="p">)</span>
 
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">part_plain</span><span class="p">)</span>
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">part_html</span><span class="p">)</span>
 </pre></div>
 <p>Analogicznie możemy dołączyć plik binarny, choćby to <a class="reference external" href="https://commons.wikimedia.org/wiki/File:%22A_Mogul_Trooper%22_(James_S._Virtue_Co.,_London,_1858).jpg#">zdjęcie</a>:</p>
-<div class="highlight"><pre><span></span><span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;plain&#39;</span><span class="p">)</span>
-<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;Look at this is very interesting photo.&quot;</span>
+<div class="highlight"><pre><span></span><span class="n">message_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">MIMEText</span><span class="p">(</span><span class="s1">'text'</span><span class="p">,</span> <span class="s1">'plain'</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">"Look at this is very interesting photo."</span>
 <span class="n">message_part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">message_part</span><span class="p">)</span>
 
-<span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trooper.jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'trooper.jpg'</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span>
 <span class="n">image_part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">mime</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">MIMEImage</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 <span class="n">message</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">image_part</span><span class="p">)</span>
 
@@ -295,11 +294,11 @@ skorzystamy z komendy APOP).</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">poplib</span>
 <span class="kn">import</span> <span class="nn">getpass</span>
 
-<span class="n">POP3_SERVER</span> <span class="o">=</span> <span class="s1">&#39;pop.googlemail.com&#39;</span>
-<span class="n">POP3_PORT</span> <span class="o">=</span> <span class="s1">&#39;995&#39;</span>
+<span class="n">POP3_SERVER</span> <span class="o">=</span> <span class="s1">'pop.googlemail.com'</span>
+<span class="n">POP3_PORT</span> <span class="o">=</span> <span class="s1">'995'</span>
 
-<span class="n">username</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">&#39;Enter your email&#39;</span><span class="p">)</span>
-<span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s1">&#39;Enter your password&#39;</span><span class="p">)</span>
+<span class="n">username</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">'Enter your email'</span><span class="p">)</span>
+<span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s1">'Enter your password'</span><span class="p">)</span>
 
 <span class="n">mailbox</span> <span class="o">=</span> <span class="n">poplib</span><span class="o">.</span><span class="n">POP3_SSL</span><span class="p">(</span><span class="n">POP3_SERVER</span><span class="p">,</span> <span class="n">POP3_PORT</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
@@ -314,24 +313,24 @@ skorzystamy z komendy APOP).</p>
 Spróbujmy więc dowiedzieć się od serwera czegoś więcej:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">poplib</span>
 
-<span class="n">POP3_SERVER</span> <span class="o">=</span> <span class="s1">&#39;pop.googlemail.com&#39;</span>
-<span class="n">POP3_PORT</span> <span class="o">=</span> <span class="s1">&#39;995&#39;</span>
-<span class="n">APP_PASSWORD</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+<span class="n">POP3_SERVER</span> <span class="o">=</span> <span class="s1">'pop.googlemail.com'</span>
+<span class="n">POP3_PORT</span> <span class="o">=</span> <span class="s1">'995'</span>
+<span class="n">APP_PASSWORD</span><span class="o">=</span><span class="s1">''</span>
 
-<span class="n">username</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">&#39;Enter your email&#39;</span><span class="p">)</span>
+<span class="n">username</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">'Enter your email'</span><span class="p">)</span>
 
 <span class="n">mailbox</span> <span class="o">=</span> <span class="n">poplib</span><span class="o">.</span><span class="n">POP3_SSL</span><span class="p">(</span><span class="n">POP3_SERVER</span><span class="p">,</span> <span class="n">POP3_PORT</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">set_debuglevel</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">pass_</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
 <span class="n">mailbox_status</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
-<span class="nb">print</span> <span class="s2">&quot;Message count </span><span class="si">{}</span><span class="s2">, mailbox size </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span> <span class="s2">"Message count </span><span class="si">{}</span><span class="s2">, mailbox size </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 <span class="nb">print</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">rset</span><span class="p">()</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 </pre></div>
 <div class="highlight"><pre><span></span>Message count <span class="m">219</span>, mailbox size <span class="m">204595639</span>
-<span class="o">(</span><span class="s1">&#39;+OK 219 messages (204595639 bytes)&#39;</span>, <span class="o">[</span><span class="s1">&#39;1 17367&#39;</span>, <span class="s1">&#39;2 43517&#39;</span>, <span class="s1">&#39;3 17122&#39;</span>, <span class="o">(</span>...<span class="o">)</span> , <span class="s1">&#39;219 133436&#39;</span><span class="o">]</span>, <span class="m">2281</span><span class="o">)</span>
+<span class="o">(</span><span class="s1">'+OK 219 messages (204595639 bytes)'</span>, <span class="o">[</span><span class="s1">'1 17367'</span>, <span class="s1">'2 43517'</span>, <span class="s1">'3 17122'</span>, <span class="o">(</span>...<span class="o">)</span> , <span class="s1">'219 133436'</span><span class="o">]</span>, <span class="m">2281</span><span class="o">)</span>
 </pre></div>
 <p>Metoda <code class="pyth python"><span class="n">POP3_SSL</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span></code> zwraca status skrzynki w postaci tupli dwóch wartości: ilości wiadomości oraz
 rozmiaru skrzynki. Dużo ciekawsza jest <code class="pyth python"><span class="n">POP3_SSL</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>. Zawołana bez żadnego argumentu podaje listę
@@ -344,27 +343,27 @@ wiadomości na serwerze. Zawołana z parametrem podaje wiadomość o przekazanym
 <span class="nb">print</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">retr</span><span class="p">(</span><span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 </pre></div>
-<div class="highlight"><pre><span></span>*cmd* <span class="s1">&#39;USER username@gmail.com&#39;</span>
-*cmd* <span class="s1">&#39;PASS ****************&#39;</span>
-*cmd* <span class="s1">&#39;RETR 219&#39;</span>
-<span class="o">(</span><span class="s1">&#39;+OK message follows&#39;</span>, <span class="o">[</span><span class="s1">&#39;Return-Path: &lt;username1@gmail.com&gt;&#39;</span>, <span class="s1">&#39;Received: from (..) for &lt;username@gmail.com&gt;&#39;</span>,
-<span class="s1">&#39;        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);&#39;</span>, <span class="s1">&#39;        Mon, 20 Feb 2017 09:17:30 -0800 (PST)&#39;</span>,
-<span class="s1">&#39;Message-ID: &lt;58ab24aa.ce18190a.d70c9.77ee@mx.google.com&gt;&#39;</span>,
-<span class="s1">&#39;Date: Mon, 20 Feb 2017 09:17:30 -0800 (PST)&#39;</span>,
-<span class="s1">&#39;Content-Type: multipart/mixed; boundary=&quot;===============0919153568==&quot;&#39;</span>, <span class="s1">&#39;MIME-Version: 1.0&#39;</span>,
-<span class="s1">&#39;TO: usernam@gmail.com&#39;</span>, <span class="s1">&#39;FROM: username1@gmail.com&#39;</span>,
-<span class="s1">&#39;Subject: Test&#39;</span>, <span class="s1">&#39;X-Antivirus: Avast (VPS 170220-1, 20.02.2017), Outbound message&#39;</span>, <span class="s1">&#39;X-Antivirus-Status: Clean&#39;</span>, <span class="s1">&#39;X-Antivirus: Avast (VPS 170220-2, 20.02.2017),</span>
-<span class="s1">Inbound message&#39;</span>, <span class="s1">&#39;X-Antivirus-Status: Clean&#39;</span>, <span class="s1">&#39;&#39;</span>, <span class="s1">&#39;--===============0919153568==&#39;</span>,
-<span class="s1">&#39;Content-Type: text/plain; charset=&quot;UTF-8&quot;&#39;</span>, <span class="s1">&#39;MIME-Version: 1.0&#39;</span>, <span class="s1">&#39;Content-Transfer-Encoding: quoted-printable&#39;</span>, <span class="s1">&#39;&#39;</span>,
-<span class="s1">&#39;This is an important message&#39;</span>, <span class="s1">&#39;&#39;</span>, <span class="s1">&#39;---&#39;</span>,<span class="o">(</span>...<span class="o">)</span>,<span class="s1">&#39;&#39;</span>, <span class="s1">&#39;--===============0919153568==&#39;</span>,
-<span class="s1">&#39;Content-Type: image/jpeg&#39;</span>, <span class="s1">&#39;MIME-Version: 1.0&#39;</span>, <span class="s1">&#39;Content-Transfer-Encoding: base64&#39;</span>, <span class="s1">&#39;&#39;</span>,
-<span class="s1">&#39;/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a&#39;</span>,
-<span class="s1">&#39;HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIy&#39;</span>,
-<span class="s1">&#39;MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAH1AyIDASIA&#39;</span>,
+<div class="highlight"><pre><span></span>*cmd* <span class="s1">'USER username@gmail.com'</span>
+*cmd* <span class="s1">'PASS ****************'</span>
+*cmd* <span class="s1">'RETR 219'</span>
+<span class="o">(</span><span class="s1">'+OK message follows'</span>, <span class="o">[</span><span class="s1">'Return-Path: &lt;username1@gmail.com&gt;'</span>, <span class="s1">'Received: from (..) for &lt;username@gmail.com&gt;'</span>,
+<span class="s1">'        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);'</span>, <span class="s1">'        Mon, 20 Feb 2017 09:17:30 -0800 (PST)'</span>,
+<span class="s1">'Message-ID: &lt;58ab24aa.ce18190a.d70c9.77ee@mx.google.com&gt;'</span>,
+<span class="s1">'Date: Mon, 20 Feb 2017 09:17:30 -0800 (PST)'</span>,
+<span class="s1">'Content-Type: multipart/mixed; boundary="===============0919153568=="'</span>, <span class="s1">'MIME-Version: 1.0'</span>,
+<span class="s1">'TO: usernam@gmail.com'</span>, <span class="s1">'FROM: username1@gmail.com'</span>,
+<span class="s1">'Subject: Test'</span>, <span class="s1">'X-Antivirus: Avast (VPS 170220-1, 20.02.2017), Outbound message'</span>, <span class="s1">'X-Antivirus-Status: Clean'</span>, <span class="s1">'X-Antivirus: Avast (VPS 170220-2, 20.02.2017),</span>
+<span class="s1">Inbound message'</span>, <span class="s1">'X-Antivirus-Status: Clean'</span>, <span class="s1">''</span>, <span class="s1">'--===============0919153568=='</span>,
+<span class="s1">'Content-Type: text/plain; charset="UTF-8"'</span>, <span class="s1">'MIME-Version: 1.0'</span>, <span class="s1">'Content-Transfer-Encoding: quoted-printable'</span>, <span class="s1">''</span>,
+<span class="s1">'This is an important message'</span>, <span class="s1">''</span>, <span class="s1">'---'</span>,<span class="o">(</span>...<span class="o">)</span>,<span class="s1">''</span>, <span class="s1">'--===============0919153568=='</span>,
+<span class="s1">'Content-Type: image/jpeg'</span>, <span class="s1">'MIME-Version: 1.0'</span>, <span class="s1">'Content-Transfer-Encoding: base64'</span>, <span class="s1">''</span>,
+<span class="s1">'/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a'</span>,
+<span class="s1">'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIy'</span>,
+<span class="s1">'MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAH1AyIDASIA'</span>,
 <span class="o">(</span>...<span class="o">)</span>
-<span class="s1">&#39;iigAoFFFAB26UdeKKKAE4z0oxRRQAAU09ce9FFAAcA9KTuaKKAEprd6KKAIycDIppHNFFAETDnmo&#39;</span>,
-<span class="s1">&#39;nHzYoooArGTBPH60UUUAf//Z&#39;</span>, <span class="s1">&#39;--===============0919153568==--&#39;</span><span class="o">]</span>, <span class="m">133527</span><span class="o">)</span>
-*cmd* <span class="s1">&#39;QUIT&#39;</span>
+<span class="s1">'iigAoFFFAB26UdeKKKAE4z0oxRRQAAU09ce9FFAAcA9KTuaKKAEprd6KKAIycDIppHNFFAETDnmo'</span>,
+<span class="s1">'nHzYoooArGTBPH60UUUAf//Z'</span>, <span class="s1">'--===============0919153568==--'</span><span class="o">]</span>, <span class="m">133527</span><span class="o">)</span>
+*cmd* <span class="s1">'QUIT'</span>
 </pre></div>
 <p>Ostatnią metodą, o której warto wspomnieć, jest <code class="pyth python"><span class="n">POP3_SSL</span><span class="o">.</span><span class="n">setdebuglevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></code>. Wywołana z argumentem równym 1 zapewnia,
 jak wyżej widać, średni poziom logowania. Natomiast z argumentem równym 2 lub większym zapisuje całą komunikację odbywającą
@@ -375,23 +374,23 @@ się na połączeniu kontrolnym:</p>
 <span class="n">mailbox_status</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 </pre></div>
-<div class="highlight"><pre><span></span>*cmd* <span class="s1">&#39;USER usernam@gmail.com&#39;</span>
-*put* <span class="s1">&#39;USER username@gmail.com&#39;</span>
-*get* <span class="s1">&#39;+OK send PASS\r\n&#39;</span>
-*resp* <span class="s1">&#39;+OK send PASS&#39;</span>
-*cmd* <span class="s1">&#39;PASS ****************&#39;</span>
-*put* <span class="s1">&#39;PASS ****************&#39;</span>
-*get* <span class="s1">&#39;+OK Welcome.\r\n&#39;</span>
-*resp* <span class="s1">&#39;+OK Welcome.&#39;</span>
-*cmd* <span class="s1">&#39;STAT&#39;</span>
-*put* <span class="s1">&#39;STAT&#39;</span>
-*get* <span class="s1">&#39;+OK 219 204595639\r\n&#39;</span>
-*resp* <span class="s1">&#39;+OK 219 204595639&#39;</span>
-*stat* <span class="o">[</span><span class="s1">&#39;+OK&#39;</span>, <span class="s1">&#39;219&#39;</span>, <span class="s1">&#39;204595639&#39;</span><span class="o">]</span>
-*cmd* <span class="s1">&#39;QUIT&#39;</span>
-*put* <span class="s1">&#39;QUIT&#39;</span>
-*get* <span class="s1">&#39;+OK Farewell.\r\n&#39;</span>
-*resp* <span class="s1">&#39;+OK Farewell.&#39;</span>
+<div class="highlight"><pre><span></span>*cmd* <span class="s1">'USER usernam@gmail.com'</span>
+*put* <span class="s1">'USER username@gmail.com'</span>
+*get* <span class="s1">'+OK send PASS\r\n'</span>
+*resp* <span class="s1">'+OK send PASS'</span>
+*cmd* <span class="s1">'PASS ****************'</span>
+*put* <span class="s1">'PASS ****************'</span>
+*get* <span class="s1">'+OK Welcome.\r\n'</span>
+*resp* <span class="s1">'+OK Welcome.'</span>
+*cmd* <span class="s1">'STAT'</span>
+*put* <span class="s1">'STAT'</span>
+*get* <span class="s1">'+OK 219 204595639\r\n'</span>
+*resp* <span class="s1">'+OK 219 204595639'</span>
+*stat* <span class="o">[</span><span class="s1">'+OK'</span>, <span class="s1">'219'</span>, <span class="s1">'204595639'</span><span class="o">]</span>
+*cmd* <span class="s1">'QUIT'</span>
+*put* <span class="s1">'QUIT'</span>
+*get* <span class="s1">'+OK Farewell.\r\n'</span>
+*resp* <span class="s1">'+OK Farewell.'</span>
 </pre></div>
 </div>
 <div class="section" id="imap">
@@ -403,21 +402,21 @@ ich otwierania.</p>
 <p>Przykładowa sesja z użyciem protokołu IMAP może wyglądać tak:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">imaplib</span>
 
-<span class="n">IMAP_SERWER</span> <span class="o">=</span> <span class="s1">&#39;imap.googlemail.com&#39;</span>
-<span class="n">IMAP_PORT</span> <span class="o">=</span> <span class="s1">&#39;993&#39;</span>
-<span class="n">USER_NAME</span> <span class="o">=</span> <span class="s1">&#39;username@gmail.com&#39;</span>
-<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;****************&#39;</span>
+<span class="n">IMAP_SERWER</span> <span class="o">=</span> <span class="s1">'imap.googlemail.com'</span>
+<span class="n">IMAP_PORT</span> <span class="o">=</span> <span class="s1">'993'</span>
+<span class="n">USER_NAME</span> <span class="o">=</span> <span class="s1">'username@gmail.com'</span>
+<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">'****************'</span>
 
 <span class="n">mailbox</span> <span class="o">=</span> <span class="n">imaplib</span><span class="o">.</span><span class="n">IMAP4_SSL</span><span class="p">(</span><span class="n">IMAP_SERWER</span><span class="p">,</span> <span class="n">IMAP_PORT</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">debug</span><span class="o">=</span><span class="mi">0</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">APP_PASSWORD</span><span class="p">)</span>
-<span class="n">mailbox</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;Inbox&#39;</span><span class="p">)</span>
-<span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;ALL&#39;</span><span class="p">)</span>
+<span class="n">mailbox</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">'Inbox'</span><span class="p">)</span>
+<span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">'ALL'</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
-    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;RFC822&#39;</span><span class="p">))</span>
+    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="s1">'RFC822'</span><span class="p">))</span>
     <span class="nb">print</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;+FLAGS&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">Seen&#39;</span><span class="p">)</span>
+    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">'+FLAGS'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\\</span><span class="s1">Seen'</span><span class="p">)</span>
 
 <span class="n">mailbox</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">logout</span><span class="p">()</span>
@@ -427,7 +426,7 @@ Tak, jak przy POP3, zaczynamy od
 utworzenia szyfrowanego połączenia i, analogicznie do poprzednich przykładów, uwierzytelniamy się adresem email oraz 'App password'.
 Następnie funkcją <code class="pyth python"><span class="n">IMAP4_SSL</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mailbox</span><span class="o">=</span><span class="s1">'INBOX'</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code> wybieramy skrzynkę, z którą chcemy pracować. Domyślnie są to wiadomości odebrane,
 natomiast nic nie stoi na przeszkodzie, by wybrać np. utworzony w ramach konta pocztowego folder.
-<code class="pyth python"><span class="n">IMAP4_SSL</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">charset</span><span class="p">,</span> <span class="o">*</span><span class="n">criteria</span><span class="p">)</span></code> umożliwia przeszukiwanie skrzynki wg zadanych kryteriów, np. <code class="pyth python"><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">'(FROM &quot;admin&quot; SUBJECT &quot;Warning&quot;)'</span></code>.
+<code class="pyth python"><span class="n">IMAP4_SSL</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">charset</span><span class="p">,</span> <span class="o">*</span><span class="n">criteria</span><span class="p">)</span></code> umożliwia przeszukiwanie skrzynki wg zadanych kryteriów, np. <code class="pyth python"><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">'(FROM "admin" SUBJECT "Warning")'</span></code>.
 Parametry polecenia <strong>SEARCH</strong> można znaleźć w <a class="reference external" href="https://tools.ietf.org/html/rfc3501#section-6.4.5">RFC3501</a>.
 Potem <code class="pyth python"><span class="n">IMAP4_SSL</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">message_set</span><span class="p">,</span> <span class="n">message_parts</span><span class="p">)</span></code> pobiera wskazane elementy wiadomości. W naszym przypadku jest to cała wiadomość,
 tak, jak jest zdefiniowana w RFC822. Można oczywiście pobrać część wiadomości, np. poniższy kod pobiera same nagłówki:
@@ -442,24 +441,24 @@ jpeg z wybranych wiadomości:</p>
 <span class="kn">import</span> <span class="nn">email</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 
-<span class="n">IMAP_SERWER</span> <span class="o">=</span> <span class="s1">&#39;imap.googlemail.com&#39;</span>
-<span class="n">IMAP_PORT</span> <span class="o">=</span> <span class="s1">&#39;993&#39;</span>
+<span class="n">IMAP_SERWER</span> <span class="o">=</span> <span class="s1">'imap.googlemail.com'</span>
+<span class="n">IMAP_PORT</span> <span class="o">=</span> <span class="s1">'993'</span>
 <span class="n">user_name</span> <span class="o">=</span> <span class="n">USER_NAME</span>
-<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;****************&#39;</span>
+<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">'****************'</span>
 
 <span class="n">mailbox</span> <span class="o">=</span> <span class="n">imaplib</span><span class="o">.</span><span class="n">IMAP4_SSL</span><span class="p">(</span><span class="n">IMAP_SERWER</span><span class="p">,</span> <span class="n">IMAP_PORT</span><span class="p">)</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">APP_PASSWORD</span><span class="p">)</span>
-<span class="n">mailbox</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;Inbox&#39;</span><span class="p">)</span>
-<span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;(FROM &quot;me&quot; Subject &quot;Photo&quot;)&#39;</span><span class="p">)</span>
+<span class="n">mailbox</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">'Inbox'</span><span class="p">)</span>
+<span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">'(FROM "me" Subject "Photo")'</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
-    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;(RFC822)&#39;</span><span class="p">))</span>
+    <span class="n">ms</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="s1">'(RFC822)'</span><span class="p">))</span>
     <span class="n">message</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">message_from_string</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">get_content_type</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;image/jpeg&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">get_content_type</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'image/jpeg'</span><span class="p">:</span>
             <span class="n">payload</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">get_payload</span><span class="p">(</span><span class="n">decode</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span> <span class="o">+</span> <span class="s1">&#39;.jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
-    <span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;+FLAGS&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">Seen&#39;</span><span class="p">)</span>
+            <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span> <span class="o">+</span> <span class="s1">'.jpg'</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="n">typ</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">'+FLAGS'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\\</span><span class="s1">Seen'</span><span class="p">)</span>
 
 <span class="n">mailbox</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="n">mailbox</span><span class="o">.</span><span class="n">logout</span><span class="p">()</span>
@@ -476,21 +475,21 @@ zapisujemy pod unikalnymi nazwami będącymi ID zwracanymi przez <code class="py
 podane adresy email: <code class="pyth python"><span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">SMTPHandler</span><span class="p">(</span><span class="n">mailhost</span><span class="p">,</span> <span class="n">fromaddr</span><span class="p">,</span> <span class="n">toaddrs</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">credentials</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging.handlers</span>
 
-<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">&#39;smtp.gmail.com&#39;</span>
+<span class="n">SMTP_SERVER</span> <span class="o">=</span> <span class="s1">'smtp.gmail.com'</span>
 <span class="n">SMTP_PORT</span> <span class="o">=</span> <span class="mi">587</span>
-<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-<span class="n">FROM</span> <span class="o">=</span> <span class="s1">&#39;from@gmail.com&#39;</span>
-<span class="n">TO</span> <span class="o">=</span> <span class="s1">&#39;to@gmail.com&#39;</span>
-<span class="n">SUBJECT</span> <span class="o">=</span> <span class="s1">&#39;Important message from logging system&#39;</span>
+<span class="n">APP_PASSWORD</span> <span class="o">=</span> <span class="s1">''</span>
+<span class="n">FROM</span> <span class="o">=</span> <span class="s1">'from@gmail.com'</span>
+<span class="n">TO</span> <span class="o">=</span> <span class="s1">'to@gmail.com'</span>
+<span class="n">SUBJECT</span> <span class="o">=</span> <span class="s1">'Important message from logging system'</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">SMTPHandler</span><span class="p">((</span><span class="n">SMTP_SERVER</span><span class="p">,</span> <span class="n">SMTP_PORT</span><span class="p">),</span> <span class="n">FROM</span><span class="p">,</span> <span class="n">TO</span><span class="p">,</span> <span class="n">SUBJECT</span><span class="p">,</span> <span class="p">(</span><span class="n">FROM</span><span class="p">,</span> <span class="n">APP_PASSWORD</span><span class="p">),</span> <span class="n">secure</span><span class="o">=</span><span class="p">())</span>
-<span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(asctime)-15s</span><span class="s2"> </span><span class="si">%(levelname)-5s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">))</span>
+<span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">"</span><span class="si">%(asctime)-15s</span><span class="s2"> </span><span class="si">%(levelname)-5s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">"</span><span class="p">))</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Some usefull message&quot;</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There is a big error&quot;</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Just ordinary info&quot;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Some usefull message"</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"There is a big error"</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Just ordinary info"</span><span class="p">)</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
 </pre></div>
 <p>Parametr <code class="pyth python"><span class="n">mailhost</span></code> może być stringiem z adresem serwera SMTP - użyty będzie wtedy domyślny port lub tuplą z
@@ -524,11 +523,11 @@ autoryzacji, do <code class="pyth python"><span class="n">credentials</span></co
 <li class="list-group-item">
   <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Recent Posts</span></h4>
   <ul class="list-group" id="recentposts">
+    <li class="list-group-item"><a href="/posts/2020/04/07/value-bad.html">Dlaczego @Value to zło</a></li>
     <li class="list-group-item"><a href="/posts/2017/08/20/lseek.html">lseek</a></li>
     <li class="list-group-item"><a href="/posts/2017/06/07/errno.html">O problemach z errno słów kilka</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/14/rpi-lkm-part-3.html">Raspberry Pi: moduły jądra - część 3</a></li>
     <li class="list-group-item"><a href="/posts/2017/03/01/email-python.html">Email w pythonie</a></li>
-    <li class="list-group-item"><a href="/posts/2017/02/13/rpi-lkm-part-2.html">Raspberry Pi: moduły jądra - część 2</a></li>
   </ul>
 </li>
 <!-- End Sidebar/Recent Posts -->
@@ -541,19 +540,28 @@ autoryzacji, do <code class="pyth python"><span class="n">credentials</span></co
       <a href="/tag/raspberry-pi.html">raspberry pi</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/c.html">c</a>
+      <a href="/tag/kernel.html">kernel</a>
     </li>
     <li class="list-group-item tag-1">
-      <a href="/tag/kernel.html">kernel</a>
+      <a href="/tag/c.html">c</a>
     </li>
     <li class="list-group-item tag-2">
       <a href="/tag/linux.html">linux</a>
     </li>
     <li class="list-group-item tag-4">
+      <a href="/tag/email.html">email</a>
+    </li>
+    <li class="list-group-item tag-4">
       <a href="/tag/python.html">python</a>
     </li>
     <li class="list-group-item tag-4">
-      <a href="/tag/email.html">email</a>
+      <a href="/tag/java.html">java</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring-boot.html">spring-boot</a>
+    </li>
+    <li class="list-group-item tag-4">
+      <a href="/tag/spring.html">spring</a>
     </li>
   </ul>
 </li>
@@ -587,7 +595,7 @@ autoryzacji, do <code class="pyth python"><span class="n">credentials</span></co
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2017 Krzysiek Witkowicz
+         <div class="col-xs-10">&copy; 2020 Krzysiek Witkowicz
             &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>                <p><small>  <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed.polish"><img alt="Creative Commons License" style="border-width:0" src="//i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
