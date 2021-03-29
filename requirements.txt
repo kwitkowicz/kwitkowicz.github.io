@@ -10,7 +10,7 @@ MarkupSafe==1.1.1
 pelican==4.2.0
 Pillow==7.1.0
 pycparser==2.17
-Pygments==2.6.1
+Pygments==2.7.4
 pysvg-py3==0.2.2.post3
 python-dateutil==2.8.1
 pytz==2019.3
